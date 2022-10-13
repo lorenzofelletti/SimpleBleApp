@@ -126,8 +126,8 @@ class MainActivity : AppCompatActivity() {
 
             bluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value)
 
-            val v = value?.get(0)
-            if (v as Int == 1) {
+            val v = value?.get(0)?.toInt()
+            if (v != null && v == 1) {
                 runThread = true
                 thread = object : Thread() {
                     override fun run() {
@@ -135,7 +135,7 @@ class MainActivity : AppCompatActivity() {
                             try {
                                 sleep(10)
                                 if (device != null) {
-                                    notifyData(device, byteArrayOf(i as Byte), false)
+                                    notifyData(device, byteArrayOf(i.toByte()), false)
                                 }
                                 i++
                             } catch (e: InterruptedException) {
@@ -185,8 +185,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        //TODO: Stop the GATT server
-        //gattServerManager.closeGattServer()
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.BLUETOOTH_CONNECT
