@@ -1,18 +1,20 @@
 package com.lorenzofelletti.simplebleapp
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import android.content.Context
+import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.ParcelUuid
 import android.widget.Button
 import android.util.Log
 import android.widget.Toast
-import com.lorenzofelletti.simplebleapp.ble.gattserver.model.BleGattServerCallback
+import androidx.core.app.ActivityCompat
 import com.lorenzofelletti.simplebleapp.permissions.AppRequiredPermissions
 import com.lorenzofelletti.simplebleapp.permissions.PermissionsUtilities
 import java.util.*
@@ -23,7 +25,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btManager: BluetoothManager
     private val btAdapter = btManager.adapter
 
-    //private lateinit var gattServerManager: GattServerManager
     private lateinit var bluetoothGattServer: BluetoothGattServer
     private lateinit var characteristicRead: BluetoothGattCharacteristic
 
@@ -147,26 +148,17 @@ class MainActivity : AppCompatActivity() {
             } else {
                 runThread = false
                 thread.interrupt()
-                //thread = null
             }
         }
     }
-
 
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // RecyclerView handling
-        //val rvFoundDevices = findViewById<View>(R.id.rv_found_devices) as RecyclerView
-        //rvFoundDevices.layoutManager = LinearLayoutManager(this)
-
         // Getting the BluetoothManager
         btManager = getSystemService(BluetoothManager::class.java)
-
-        // GATT server manager creation
-        //gattServerManager = GattServerManager(btManager, this.baseContext)
 
         // Adding the onclick listener to the start server button
         btnStartServer = findViewById(R.id.btn_start_server)
@@ -194,6 +186,14 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         //TODO: Stop the GATT server
         //gattServerManager.closeGattServer()
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+
+            bluetoothGattServer.close()
+        }
     }
 
     /**
@@ -236,22 +236,6 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("MissingPermission")
     private fun startGattServer() {
         // Start GATT server
-        /*gattServerManager.setupGattServer()
-        // Adding the service to the GATT server
-        gattServerManager.addService(
-            BluetoothGattService(
-                SERVICE_UUID,
-                BluetoothGattService.SERVICE_TYPE_PRIMARY
-            )
-        )
-        gattServerManager.addService(
-            BluetoothGattService(
-                READ_CHARACTERISTIC_UUID,
-                BluetoothGattCharacteristic.PROPERTY_READ,
-                BluetoothGattCharacteristic.PERMISSION_READ
-            )
-        )*/
-        //TODO: Start the GATT server
         val advertiseSettings = AdvertiseSettings.Builder()
             //.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
             .setConnectable(true)
@@ -296,8 +280,6 @@ class MainActivity : AppCompatActivity() {
         characteristic: BluetoothGattCharacteristic
     ) {
         if (DEBUG) Log.i(TAG, "${::onResponseToClient.name} - Sending response to client")
-
-        val responseBytes = requestBytes
 
         val str = "Hello"
         characteristicRead.value = str.toByteArray()
