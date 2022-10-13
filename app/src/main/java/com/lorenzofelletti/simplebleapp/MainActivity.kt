@@ -23,10 +23,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnStartServer: Button
 
     private lateinit var btManager: BluetoothManager
-    private val btAdapter = btManager.adapter
+    private lateinit var btAdapter: BluetoothAdapter
 
-    private lateinit var bluetoothGattServer: BluetoothGattServer
-    private lateinit var characteristicRead: BluetoothGattCharacteristic
+    private var bluetoothGattServer: BluetoothGattServer? = null
+    private var characteristicRead: BluetoothGattCharacteristic? = null
 
     private lateinit var thread: Thread
     private var runThread = false
@@ -62,7 +62,7 @@ class MainActivity : AppCompatActivity() {
                 TAG,
                 "${::onCharacteristicReadRequest.name} - Read request for characteristic: $characteristic"
             )
-            bluetoothGattServer.sendResponse(
+            bluetoothGattServer?.sendResponse(
                 device,
                 requestId,
                 BluetoothGatt.GATT_SUCCESS,
@@ -124,7 +124,7 @@ class MainActivity : AppCompatActivity() {
                 "${::onDescriptorWriteRequest.name} - Write request for descriptor: $descriptor"
             )
 
-            bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value)
+            bluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value)
 
             val v = value?.get(0)
             if (v as Int == 1) {
@@ -159,6 +159,7 @@ class MainActivity : AppCompatActivity() {
 
         // Getting the BluetoothManager
         btManager = getSystemService(BluetoothManager::class.java)
+        btAdapter = btManager.adapter
 
         // Adding the onclick listener to the start server button
         btnStartServer = findViewById(R.id.btn_start_server)
@@ -192,7 +193,7 @@ class MainActivity : AppCompatActivity() {
             ) == PackageManager.PERMISSION_GRANTED
         ) {
 
-            bluetoothGattServer.close()
+            bluetoothGattServer?.close()
         }
     }
 
@@ -282,14 +283,14 @@ class MainActivity : AppCompatActivity() {
         if (DEBUG) Log.i(TAG, "${::onResponseToClient.name} - Sending response to client")
 
         val str = "Hello"
-        characteristicRead.value = str.toByteArray()
-        bluetoothGattServer.notifyCharacteristicChanged(device, characteristicRead, false)
+        characteristicRead?.value = str.toByteArray()
+        bluetoothGattServer?.notifyCharacteristicChanged(device, characteristicRead, false)
     }
 
     @SuppressLint("MissingPermission")
     private fun notifyData(device: BluetoothDevice, value: ByteArray, confirm: Boolean) {
         var characteristic: BluetoothGattCharacteristic? = null
-        for (service in bluetoothGattServer.services) {
+        for (service in bluetoothGattServer?.services!!) {
             for (iCharacteristic in service.characteristics) {
                 if (iCharacteristic.uuid == UUID_DESCRIPTOR) {
                     characteristic = iCharacteristic
@@ -299,7 +300,7 @@ class MainActivity : AppCompatActivity() {
         }
         if (characteristic != null) {
             characteristic.value = value
-            bluetoothGattServer.notifyCharacteristicChanged(device, characteristic, confirm)
+            bluetoothGattServer?.notifyCharacteristicChanged(device, characteristic, confirm)
         }
     }
 

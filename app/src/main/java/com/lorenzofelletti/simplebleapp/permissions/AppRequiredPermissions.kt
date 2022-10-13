@@ -15,5 +15,6 @@ object AppRequiredPermissions {
         Manifest.permission.BLUETOOTH_ADMIN,
         Manifest.permission.BLUETOOTH_CONNECT,
         Manifest.permission.BLUETOOTH_ADVERTISE,
+        Manifest.permission.BLUETOOTH,
     )
 }
