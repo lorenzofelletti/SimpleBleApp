@@ -15,6 +15,7 @@ import android.widget.Button
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import com.lorenzofelletti.simplebleapp.ble.gattserver.model.BleGattServerCallback
 import com.lorenzofelletti.simplebleapp.permissions.AppRequiredPermissions
 import com.lorenzofelletti.simplebleapp.permissions.PermissionsUtilities
 import java.util.*
@@ -28,129 +29,7 @@ class MainActivity : AppCompatActivity() {
     private var bluetoothGattServer: BluetoothGattServer? = null
     private var characteristicRead: BluetoothGattCharacteristic? = null
 
-    private lateinit var thread: Thread
-    private var runThread = false
-
-    private val gattServerCallback = object : BluetoothGattServerCallback() {
-        var i = 0
-        override fun onConnectionStateChange(device: BluetoothDevice?, status: Int, newState: Int) {
-            super.onConnectionStateChange(device, status, newState)
-
-            if (DEBUG) Log.i(
-                TAG, "${::onConnectionStateChange.name} - BluetoothDevice CONNECTED: $device"
-            )
-        }
-
-        override fun onServiceAdded(status: Int, service: BluetoothGattService?) {
-            super.onServiceAdded(status, service)
-
-            if (DEBUG) Log.i(
-                TAG, "${::onServiceAdded.name} - BluetoothGattService ADDED: $service"
-            )
-        }
-
-        @SuppressLint("MissingPermission")
-        override fun onCharacteristicReadRequest(
-            device: BluetoothDevice?,
-            requestId: Int,
-            offset: Int,
-            characteristic: BluetoothGattCharacteristic?
-        ) {
-            super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
-
-            if (DEBUG) Log.i(
-                TAG,
-                "${::onCharacteristicReadRequest.name} - Read request for characteristic: $characteristic"
-            )
-            bluetoothGattServer?.sendResponse(
-                device,
-                requestId,
-                BluetoothGatt.GATT_SUCCESS,
-                offset,
-                characteristic?.value
-            )
-        }
-
-        override fun onCharacteristicWriteRequest(
-            device: BluetoothDevice?,
-            requestId: Int,
-            characteristic: BluetoothGattCharacteristic?,
-            preparedWrite: Boolean,
-            responseNeeded: Boolean,
-            offset: Int,
-            value: ByteArray?
-        ) {
-            super.onCharacteristicWriteRequest(
-                device,
-                requestId,
-                characteristic,
-                preparedWrite,
-                responseNeeded,
-                offset,
-                value
-            )
-
-            if (DEBUG) Log.i(
-                TAG,
-                "${::onCharacteristicWriteRequest.name} - Write request for characteristic: $characteristic"
-            )
-
-            if (value != null && device != null && characteristic != null) {
-                onResponseToClient(value, device, requestId, characteristic)
-            }
-        }
-
-        @SuppressLint("MissingPermission")
-        override fun onDescriptorWriteRequest(
-            device: BluetoothDevice?,
-            requestId: Int,
-            descriptor: BluetoothGattDescriptor?,
-            preparedWrite: Boolean,
-            responseNeeded: Boolean,
-            offset: Int,
-            value: ByteArray?
-        ) {
-            super.onDescriptorWriteRequest(
-                device,
-                requestId,
-                descriptor,
-                preparedWrite,
-                responseNeeded,
-                offset,
-                value
-            )
-            if (DEBUG) Log.i(
-                TAG,
-                "${::onDescriptorWriteRequest.name} - Write request for descriptor: $descriptor"
-            )
-
-            bluetoothGattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value)
-
-            val v = value?.get(0)?.toInt()
-            if (v != null && v == 1) {
-                runThread = true
-                thread = object : Thread() {
-                    override fun run() {
-                        while (runThread) {
-                            try {
-                                sleep(10)
-                                if (device != null) {
-                                    notifyData(device, byteArrayOf(i.toByte()), false)
-                                }
-                                i++
-                            } catch (e: InterruptedException) {
-                                e.printStackTrace()
-                            }
-                        }
-                    }
-                }
-                thread.start()
-            } else {
-                runThread = false
-                thread.interrupt()
-            }
-        }
-    }
+    private var gattServerCallback: BleGattServerCallback? = null
 
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -236,10 +115,7 @@ class MainActivity : AppCompatActivity() {
     private fun startGattServer() {
         // Start GATT server
         val advertiseSettings = AdvertiseSettings.Builder()
-            //.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
             .setConnectable(true)
-            //.setTimeout(0)
-            //.setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
             .build()
         val advertiseData = AdvertiseData.Builder()
             .setIncludeDeviceName(true)
@@ -268,6 +144,7 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("MissingPermission")
     fun initServices(context: Context) {
+        gattServerCallback = BleGattServerCallback(::onResponseToClient, ::notifyData)
         bluetoothGattServer = btManager.openGattServer(context, gattServerCallback)
     }
 
