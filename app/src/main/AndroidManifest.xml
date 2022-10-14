@@ -33,6 +33,15 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
+
+        <!--
+        Service to handle BLE Advertising - Using a service allows advertising to continue
+        when the app is no longer on screen in a reliable manner.
+        -->
+        <service
+            android:name=".ble.gattserver.PeripheralAdvertiseService"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 
 </manifest>

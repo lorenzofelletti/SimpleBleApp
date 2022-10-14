@@ -9,7 +9,7 @@ class BleAdvertiseCallback(
     override fun onStartSuccess(settingsInEffect: android.bluetooth.le.AdvertiseSettings?) {
         super.onStartSuccess(settingsInEffect)
 
-        if (DEBUG) android.util.Log.d(TAG, "${::onStartSuccess.name} - Advertising started")
+        if (DEBUG) android.util.Log.d(TAG, "${::onStartSuccess.name} - LE Advertise Started")
 
         doOnStartSuccess()
     }
@@ -17,7 +17,7 @@ class BleAdvertiseCallback(
     override fun onStartFailure(errorCode: Int) {
         super.onStartFailure(errorCode)
 
-        if (DEBUG) android.util.Log.d(TAG, "${::onStartFailure.name} - Advertising failed")
+        if (DEBUG) android.util.Log.d(TAG, "${::onStartFailure.name} - LE Advertise Failed: $errorCode")
 
         doOnStartFailure()
     }

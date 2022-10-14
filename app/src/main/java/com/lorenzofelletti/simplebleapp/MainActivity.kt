@@ -1,20 +1,18 @@
 package com.lorenzofelletti.simplebleapp
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.bluetooth.*
-import android.bluetooth.le.AdvertiseCallback
-import android.bluetooth.le.AdvertiseData
-import android.bluetooth.le.AdvertiseSettings
+import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothGattServer
+import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
-import android.content.pm.PackageManager
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.ParcelUuid
 import android.widget.Button
 import android.util.Log
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
+import com.lorenzofelletti.simplebleapp.ble.gattserver.PeripheralAdvertiseService
 import com.lorenzofelletti.simplebleapp.ble.gattserver.model.BleGattServerCallback
 import com.lorenzofelletti.simplebleapp.permissions.AppRequiredPermissions
 import com.lorenzofelletti.simplebleapp.permissions.PermissionsUtilities
@@ -28,7 +26,6 @@ class MainActivity : AppCompatActivity() {
 
     private var bluetoothGattServer: BluetoothGattServer? = null
     private var characteristicRead: BluetoothGattCharacteristic? = null
-
     private var gattServerCallback: BleGattServerCallback? = null
 
     @SuppressLint("MissingPermission")
@@ -36,42 +33,84 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Getting the BluetoothManager
         btManager = getSystemService(BluetoothManager::class.java)
         btAdapter = btManager.adapter
 
         // Adding the onclick listener to the start server button
         btnStartServer = findViewById(R.id.btn_start_server)
-        btnStartServer.setOnClickListener {
-            if (DEBUG) Log.i(TAG, "${it.javaClass.simpleName}:${it.id} - onClick event")
-            Toast.makeText(this, "Start GATT server", Toast.LENGTH_SHORT).show()
 
-            // Checks if the required permissions are granted and starts the scan if so, otherwise it requests them
-            when (PermissionsUtilities.checkPermissionsGranted(
-                this,
-                AppRequiredPermissions.permissions
-            )) {
-                true -> {
-                    startGattServer()
-                }
-                false -> PermissionsUtilities.checkPermissions(
-                    this, AppRequiredPermissions.permissions, BLE_SERVER_REQUEST_CODE
-                )
-            }
-        }
+        btnStartServer.setOnClickListener(
+            startServerOnClickListenerBuilder(
+                startServer = {
+                    Toast.makeText(this, "Starting the GATT server", Toast.LENGTH_SHORT).show()
 
+                    /* Checks if the required permissions are granted and starts the GATT server,
+                     * requesting them otherwise. */
+                    when (PermissionsUtilities.checkPermissionsGranted(
+                        this,
+                        AppRequiredPermissions.permissions
+                    )) {
+                        true -> {
+                            startGattServer()
+                        }
+                        false -> PermissionsUtilities.checkPermissions(
+                            this, AppRequiredPermissions.permissions, BLE_SERVER_REQUEST_CODE
+                        )
+                    }
+                },
+                stopServer = {
+                    stopAdvertising()
+                })
+        )
     }
 
-    override fun onPause() {
-        super.onPause()
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.BLUETOOTH_CONNECT
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
+    /**
+     * Starts the GATT server.
+     *
+     * It starts the advertising service and creates the GATT server.
+     */
+    private fun startGattServer() {
+        startAdvertising()
+        setGattServer()
+        setBluetoothService()
+    }
 
-            bluetoothGattServer?.close()
-        }
+    private fun updateBtnStartServerText(isAdvertisingOn: Boolean) {
+        btnStartServer.setText(if (isAdvertisingOn) R.string.stop_server else R.string.start_server)
+    }
+
+    private fun startAdvertising() {
+        if (DEBUG) Log.i(TAG, "${::startAdvertising.name} - Starting Advertising Service")
+
+        updateBtnStartServerText(true)
+
+        startService(getServiceIntent(this))
+    }
+
+    private fun stopAdvertising() {
+        if (DEBUG) Log.i(TAG, "${::stopAdvertising.name} - Stopping Advertising Service")
+
+        updateBtnStartServerText(false)
+
+        stopService(getServiceIntent(this))
+    }
+
+    /**
+     * Returns the intent to start the [PeripheralAdvertiseService].
+     *
+     * @param context The context to use to create the intent.
+     * @return The intent to start the [PeripheralAdvertiseService].
+     */
+    private fun getServiceIntent(context: Context): Intent? {
+        return Intent(context, PeripheralAdvertiseService::class.java)
+    }
+
+    private fun setBluetoothService() {
+        TODO("Not yet implemented")
+    }
+
+    private fun setGattServer() {
+        TODO("Not yet implemented")
     }
 
     /**
@@ -108,74 +147,6 @@ class MainActivity : AppCompatActivity() {
                     Toast.LENGTH_LONG
                 ).show()
             }
-        }
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun startGattServer() {
-        // Start GATT server
-        val advertiseSettings = AdvertiseSettings.Builder()
-            .setConnectable(true)
-            .build()
-        val advertiseData = AdvertiseData.Builder()
-            .setIncludeDeviceName(true)
-            .setIncludeTxPowerLevel(false)
-            .build()
-        val scanResponseData = AdvertiseData.Builder()
-            .addServiceUuid(ParcelUuid(UUID_SERVICE))
-            .setIncludeTxPowerLevel(false)
-            .build()
-        val callback = object : AdvertiseCallback() {
-            override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
-                super.onStartSuccess(settingsInEffect)
-                if (DEBUG) Log.i(TAG, "LE Advertise Started.")
-                initServices(applicationContext)
-            }
-
-            override fun onStartFailure(errorCode: Int) {
-                super.onStartFailure(errorCode)
-                if (DEBUG) Log.e(TAG, "LE Advertise Failed: $errorCode")
-            }
-        }
-
-        val bleAdvertiser = btAdapter.bluetoothLeAdvertiser
-        bleAdvertiser.startAdvertising(advertiseSettings, advertiseData, scanResponseData, callback)
-    }
-
-    @SuppressLint("MissingPermission")
-    fun initServices(context: Context) {
-        gattServerCallback = BleGattServerCallback(::onResponseToClient, ::notifyData)
-        bluetoothGattServer = btManager.openGattServer(context, gattServerCallback)
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun onResponseToClient(
-        requestBytes: ByteArray,
-        device: BluetoothDevice,
-        requestId: Int,
-        characteristic: BluetoothGattCharacteristic
-    ) {
-        if (DEBUG) Log.i(TAG, "${::onResponseToClient.name} - Sending response to client")
-
-        val str = "Hello"
-        characteristicRead?.value = str.toByteArray()
-        bluetoothGattServer?.notifyCharacteristicChanged(device, characteristicRead, false)
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun notifyData(device: BluetoothDevice, value: ByteArray, confirm: Boolean) {
-        var characteristic: BluetoothGattCharacteristic? = null
-        for (service in bluetoothGattServer?.services!!) {
-            for (iCharacteristic in service.characteristics) {
-                if (iCharacteristic.uuid == UUID_DESCRIPTOR) {
-                    characteristic = iCharacteristic
-                    break
-                }
-            }
-        }
-        if (characteristic != null) {
-            characteristic.value = value
-            bluetoothGattServer?.notifyCharacteristicChanged(device, characteristic, confirm)
         }
     }
 

@@ -1,26 +1,25 @@
 package com.lorenzofelletti.simplebleapp.ble.gattserver.model
 
 import android.annotation.SuppressLint
-import android.bluetooth.*
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattServer
+import android.bluetooth.BluetoothGattServerCallback
+import android.bluetooth.BluetoothGattService
+import android.bluetooth.BluetoothGatt
+import android.bluetooth.BluetoothGattDescriptor
 import android.util.Log
+import androidx.annotation.RequiresPermission
 import com.lorenzofelletti.simplebleapp.BuildConfig
-import kotlin.reflect.KFunction4
 
-class BleGattServerCallback(
-    private val onResponseToClient: KFunction4<ByteArray, BluetoothDevice, Int, BluetoothGattCharacteristic, Unit>,
-    private val notifyData: (BluetoothDevice, ByteArray, Boolean) -> Unit
-) : BluetoothGattServerCallback() {
+class BleGattServerCallback : BluetoothGattServerCallback() {
     private var bluetoothGattServer: BluetoothGattServer? = null
-    private lateinit var thread: Thread
-    private var runThread = false
-    private var i = 0
 
     override fun onConnectionStateChange(device: BluetoothDevice?, status: Int, newState: Int) {
         super.onConnectionStateChange(device, status, newState)
 
         if (DEBUG) Log.i(
-            TAG,
-            "${::onConnectionStateChange.name} - BluetoothDevice CONNECTED: $device"
+            TAG, "${::onConnectionStateChange.name} - BluetoothDevice CONNECTED: $device"
         )
     }
 
@@ -39,21 +38,17 @@ class BleGattServerCallback(
         offset: Int,
         characteristic: BluetoothGattCharacteristic?
     ) {
-        super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
-
         if (DEBUG) Log.i(
             TAG,
             "${::onCharacteristicReadRequest.name} - Read request for characteristic: $characteristic"
         )
+
         bluetoothGattServer?.sendResponse(
-            device,
-            requestId,
-            BluetoothGatt.GATT_SUCCESS,
-            offset,
-            characteristic?.value
+            device, requestId, BluetoothGatt.GATT_SUCCESS, offset, characteristic?.value
         )
     }
 
+    @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
     override fun onCharacteristicWriteRequest(
         device: BluetoothDevice?,
         requestId: Int,
@@ -63,23 +58,25 @@ class BleGattServerCallback(
         offset: Int,
         value: ByteArray?
     ) {
-        super.onCharacteristicWriteRequest(
-            device,
-            requestId,
-            characteristic,
-            preparedWrite,
-            responseNeeded,
-            offset,
-            value
-        )
-
         if (DEBUG) Log.i(
             TAG,
             "${::onCharacteristicWriteRequest.name} - Write request for characteristic: $characteristic"
         )
 
-        if (value != null && device != null && characteristic != null) {
-            onResponseToClient(value, device, requestId, characteristic)
+        var success = false
+        if (value != null && characteristic != null) {
+            characteristic.value = value
+            success = true
+        }
+
+        if (responseNeeded) {
+            bluetoothGattServer?.sendResponse(
+                device,
+                requestId,
+                if (success) BluetoothGatt.GATT_SUCCESS else BluetoothGatt.GATT_FAILURE,
+                0,
+                value
+            )
         }
     }
 
@@ -93,54 +90,9 @@ class BleGattServerCallback(
         offset: Int,
         value: ByteArray?
     ) {
-        super.onDescriptorWriteRequest(
-            device,
-            requestId,
-            descriptor,
-            preparedWrite,
-            responseNeeded,
-            offset,
-            value
-        )
         if (DEBUG) Log.i(
-            TAG,
-            "${::onDescriptorWriteRequest.name} - Write request for descriptor: $descriptor"
+            TAG, "${::onDescriptorWriteRequest.name} - Write request for descriptor: $descriptor"
         )
-
-        //TODO: consider moving this in the if below
-        if (responseNeeded) {
-            bluetoothGattServer?.sendResponse(
-                device,
-                requestId,
-                BluetoothGatt.GATT_SUCCESS,
-                offset,
-                value
-            )
-        }
-
-        val v = value?.get(0)?.toInt()
-        if (v != null && v == 1) {
-            runThread = true
-            thread = object : Thread() {
-                override fun run() {
-                    while (runThread) {
-                        try {
-                            sleep(10)
-                            if (device != null) {
-                                notifyData(device, byteArrayOf(i.toByte()), false)
-                            }
-                            i++
-                        } catch (e: InterruptedException) {
-                            e.printStackTrace()
-                        }
-                    }
-                }
-            }
-            thread.start()
-        } else {
-            runThread = false
-            thread.interrupt()
-        }
     }
 
     companion object {
