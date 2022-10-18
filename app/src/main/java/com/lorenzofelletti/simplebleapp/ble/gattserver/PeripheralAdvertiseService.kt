@@ -9,6 +9,7 @@ import android.bluetooth.le.AdvertiseSettings
 import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Context
 import android.os.Handler
+import android.os.Looper
 import android.os.ParcelUuid
 import android.util.Log
 import androidx.annotation.RequiresPermission
@@ -17,13 +18,13 @@ import com.lorenzofelletti.simplebleapp.ble.gattserver.model.Constants
 import java.util.concurrent.TimeUnit
 
 class PeripheralAdvertiseService(
-    private var advertiseCallback: AdvertiseCallback = BleAdvertiseCallback()
+    private var advertiseCallback: AdvertiseCallback? = null
 ) :
     Service() {
     private var running = false
 
     private lateinit var bluetoothLeAdvertiser: BluetoothLeAdvertiser
-    private val handler: Handler = Handler()
+    private val handler: Handler = Handler(Looper.myLooper()!!)
     private val timeoutRunnable: Runnable = Runnable { stopSelf() }
 
     @RequiresPermission("android.permission.BLUETOOTH_ADVERTISE")
@@ -49,6 +50,8 @@ class PeripheralAdvertiseService(
         if (DEBUG) Log.d(TAG, "${::stopAdvertising.name} - Stopping advertising")
 
         bluetoothLeAdvertiser.stopAdvertising(advertiseCallback)
+
+        advertiseCallback = null
     }
 
     /**
@@ -64,12 +67,14 @@ class PeripheralAdvertiseService(
 
         val settings: AdvertiseSettings = buildAdvertiseSettings()
         val data: AdvertiseData = buildAdvertiseData()
+        advertiseCallback = BleAdvertiseCallback()
+
         bluetoothLeAdvertiser.startAdvertising(settings, data, advertiseCallback)
     }
 
     private fun buildAdvertiseData(): AdvertiseData {
         return AdvertiseData.Builder()
-            .addServiceUuid(ParcelUuid(Constants.UUID_SERVICE))
+            .addServiceUuid(ParcelUuid(Constants.UUID_MY_SERVICE))
             .setIncludeDeviceName(true)
             .build()
     }

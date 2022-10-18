@@ -1,10 +1,7 @@
 package com.lorenzofelletti.simplebleapp
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothGattServer
-import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.*
 import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -12,11 +9,13 @@ import android.os.Bundle
 import android.widget.Button
 import android.util.Log
 import android.widget.Toast
+import com.lorenzofelletti.simplebleapp.ble.gattserver.CharacteristicUtilities
 import com.lorenzofelletti.simplebleapp.ble.gattserver.PeripheralAdvertiseService
 import com.lorenzofelletti.simplebleapp.ble.gattserver.model.BleGattServerCallback
+import com.lorenzofelletti.simplebleapp.ble.gattserver.model.Constants.UUID_MY_CHARACTERISTIC
+import com.lorenzofelletti.simplebleapp.ble.gattserver.model.Constants.UUID_MY_SERVICE
 import com.lorenzofelletti.simplebleapp.permissions.AppRequiredPermissions
 import com.lorenzofelletti.simplebleapp.permissions.PermissionsUtilities
-import java.util.*
 
 class MainActivity : AppCompatActivity() {
     private lateinit var btnStartServer: Button
@@ -25,8 +24,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btAdapter: BluetoothAdapter
 
     private var bluetoothGattServer: BluetoothGattServer? = null
-    private var characteristicRead: BluetoothGattCharacteristic? = null
-    private var gattServerCallback: BleGattServerCallback? = null
+    private var myService: BluetoothGattService? = null
+    private var myCharacteristic: BluetoothGattCharacteristic? = null
 
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,6 +58,8 @@ class MainActivity : AppCompatActivity() {
                     }
                 },
                 stopServer = {
+                    Toast.makeText(this, "Stopping the GATT server", Toast.LENGTH_SHORT).show()
+
                     stopAdvertising()
                 })
         )
@@ -101,16 +102,45 @@ class MainActivity : AppCompatActivity() {
      * @param context The context to use to create the intent.
      * @return The intent to start the [PeripheralAdvertiseService].
      */
-    private fun getServiceIntent(context: Context): Intent? {
+    private fun getServiceIntent(context: Context): Intent {
         return Intent(context, PeripheralAdvertiseService::class.java)
     }
 
+    /**
+     * Creates the service and the characteristic to be added to the GATT server and
+     * adds them to the GATT server.
+     */
+    @SuppressLint("MissingPermission")
     private fun setBluetoothService() {
-        TODO("Not yet implemented")
+        myService = BluetoothGattService(
+            UUID_MY_SERVICE,
+            BluetoothGattService.SERVICE_TYPE_PRIMARY
+        )
+        myCharacteristic = BluetoothGattCharacteristic(
+            UUID_MY_CHARACTERISTIC,
+            BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
+            BluetoothGattCharacteristic.PERMISSION_READ
+        )
+
+        setCharacteristic("Hello World!")
+
+        myService?.addCharacteristic(myCharacteristic)
+
+        bluetoothGattServer?.addService(myService)
     }
 
+    private fun <T> setCharacteristic(value: T) {
+        myCharacteristic?.value = CharacteristicUtilities.getValueAsByteArray(value)
+    }
+
+
+    @SuppressLint("MissingPermission")
     private fun setGattServer() {
-        TODO("Not yet implemented")
+        val callback = BleGattServerCallback()
+
+        bluetoothGattServer = btManager.openGattServer(this, callback)
+
+        callback.bluetoothGattServer = bluetoothGattServer
     }
 
     /**
@@ -155,10 +185,5 @@ class MainActivity : AppCompatActivity() {
         private val DEBUG: Boolean = BuildConfig.DEBUG
 
         private const val BLE_SERVER_REQUEST_CODE = 2
-        private val UUID_SERVICE = UUID.fromString("23782c92-139c-4846-aac5-31d1b078d439")
-        private val UUID_READ_CHARACTERISTIC =
-            UUID.fromString("23782c92-139c-4846-aac5-31d1b078d440")
-        private val UUID_DESCRIPTOR =
-            UUID.fromString("23782c92-139c-4846-aac5-31d1b078d441")
     }
 }

@@ -1,6 +1,5 @@
 package com.lorenzofelletti.simplebleapp.ble.gattserver.model
 
-import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattServer
@@ -13,13 +12,37 @@ import androidx.annotation.RequiresPermission
 import com.lorenzofelletti.simplebleapp.BuildConfig
 
 class BleGattServerCallback : BluetoothGattServerCallback() {
-    private var bluetoothGattServer: BluetoothGattServer? = null
+    var bluetoothGattServer: BluetoothGattServer? = null
+    private val bluetoothConnectedDevices: MutableSet<BluetoothDevice> = mutableSetOf()
 
     override fun onConnectionStateChange(device: BluetoothDevice?, status: Int, newState: Int) {
         super.onConnectionStateChange(device, status, newState)
 
         if (DEBUG) Log.i(
             TAG, "${::onConnectionStateChange.name} - BluetoothDevice CONNECTED: $device"
+        )
+
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+            when (newState) {
+                BluetoothGatt.STATE_CONNECTED -> {
+                    bluetoothConnectedDevices.add(device!!)
+                }
+                BluetoothGatt.STATE_DISCONNECTED -> {
+                    bluetoothConnectedDevices.remove(device!!)
+                }
+            }
+        } else {
+            if (DEBUG) Log.w(TAG, "${::onConnectionStateChange.name} - Error: $status")
+
+            bluetoothConnectedDevices.remove(device!!)
+        }
+    }
+
+    override fun onNotificationSent(device: BluetoothDevice?, status: Int) {
+        super.onNotificationSent(device, status)
+
+        if (DEBUG) Log.i(
+            TAG, "${::onNotificationSent.name} - BluetoothDevice NOTIFICATION SENT: $device}"
         )
     }
 
@@ -31,7 +54,7 @@ class BleGattServerCallback : BluetoothGattServerCallback() {
         )
     }
 
-    @SuppressLint("MissingPermission")
+    @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
     override fun onCharacteristicReadRequest(
         device: BluetoothDevice?,
         requestId: Int,
@@ -80,7 +103,7 @@ class BleGattServerCallback : BluetoothGattServerCallback() {
         }
     }
 
-    @SuppressLint("MissingPermission")
+    @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
     override fun onDescriptorWriteRequest(
         device: BluetoothDevice?,
         requestId: Int,
@@ -93,6 +116,16 @@ class BleGattServerCallback : BluetoothGattServerCallback() {
         if (DEBUG) Log.i(
             TAG, "${::onDescriptorWriteRequest.name} - Write request for descriptor: $descriptor"
         )
+
+        if (responseNeeded) {
+            bluetoothGattServer?.sendResponse(
+                device,
+                requestId,
+                BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED,
+                0,
+                value
+            )
+        }
     }
 
     companion object {

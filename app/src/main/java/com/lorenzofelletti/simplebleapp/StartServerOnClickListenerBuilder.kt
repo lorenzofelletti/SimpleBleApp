@@ -6,7 +6,7 @@ private const val TAG = "onClickListener"
 private val DEBUG = BuildConfig.DEBUG
 
 /**
- * A function that builds an [android.view.View.OnClickListener] for starting the BLE server having
+ * A function that builds an [android.view.View.OnClickListener] for starting/stopping the BLE server having
  * two different behaviors depending on whether a server is already running or not.
  *
  * @param initialServerState The initial state of the server.
