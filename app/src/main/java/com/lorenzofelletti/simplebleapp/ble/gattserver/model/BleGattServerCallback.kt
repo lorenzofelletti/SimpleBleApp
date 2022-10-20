@@ -11,6 +11,11 @@ import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.lorenzofelletti.simplebleapp.BuildConfig
 
+/**
+ * This class is used to handle the callbacks of the GattServer.
+ *
+ * @param bluetoothConnectedDevices A reference to the list of connected devices.
+ */
 class BleGattServerCallback(private val bluetoothConnectedDevices: MutableSet<BluetoothDevice>) : BluetoothGattServerCallback() {
     var bluetoothGattServer: BluetoothGattServer? = null
 

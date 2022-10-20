@@ -8,6 +8,7 @@ import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Context
+import android.os.Binder
 import android.os.Handler
 import android.os.Looper
 import android.os.ParcelUuid
@@ -17,20 +18,33 @@ import com.lorenzofelletti.simplebleapp.ble.gattserver.model.BleAdvertiseCallbac
 import com.lorenzofelletti.simplebleapp.ble.gattserver.model.Constants
 import java.util.concurrent.TimeUnit
 
+/**
+ * Service that handles the BLE advertising in peripheral mode.
+ */
 class PeripheralAdvertiseService(
     private var advertiseCallback: AdvertiseCallback? = null
 ) :
     Service() {
+    private val binder = PeripheralAdvertiseBinder()
+
     private var running = false
 
     private lateinit var bluetoothLeAdvertiser: BluetoothLeAdvertiser
     private val handler: Handler = Handler(Looper.myLooper()!!)
+
+    /**
+     * Actions to be performed when the service is stopped.
+     */
+    val onServiceStopActions: MutableList<() -> Unit> = mutableListOf()
+
     private val timeoutRunnable: Runnable = Runnable { stopSelf() }
 
     @RequiresPermission("android.permission.BLUETOOTH_ADVERTISE")
     override fun onCreate() {
         super.onCreate()
+
         running = true
+
         initialize()
         startAdvertising()
         setTimeout()
@@ -39,10 +53,24 @@ class PeripheralAdvertiseService(
     @SuppressLint("MissingPermission")
     override fun onDestroy() {
         running = false
+
+        onServiceStopActions.forEach { it() }
+
         stopAdvertising()
         handler.removeCallbacks(timeoutRunnable)
         stopForeground(true)
         super.onDestroy()
+    }
+
+    override fun onBind(intent: android.content.Intent?): android.os.IBinder {
+        return binder
+    }
+
+    /**
+     * A [Binder] for this service.
+     */
+    inner class PeripheralAdvertiseBinder : Binder() {
+        fun getService(): PeripheralAdvertiseService = this@PeripheralAdvertiseService
     }
 
     @RequiresPermission("android.permission.BLUETOOTH_ADVERTISE")
@@ -72,21 +100,6 @@ class PeripheralAdvertiseService(
         bluetoothLeAdvertiser.startAdvertising(settings, data, advertiseCallback)
     }
 
-    private fun buildAdvertiseData(): AdvertiseData {
-        return AdvertiseData.Builder()
-            .addServiceUuid(ParcelUuid(Constants.UUID_MY_SERVICE))
-            .setIncludeDeviceName(true)
-            .build()
-    }
-
-    private fun buildAdvertiseSettings(): AdvertiseSettings {
-        return AdvertiseSettings.Builder()
-            .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER)
-            .setConnectable(true)
-            .setTimeout(0)
-            .build()
-    }
-
     /**
      * Initializes the [BluetoothLeAdvertiser].
      */
@@ -94,14 +107,6 @@ class PeripheralAdvertiseService(
         bluetoothLeAdvertiser = getSystemService(Context.BLUETOOTH_SERVICE).let {
             (it as BluetoothManager).adapter.bluetoothLeAdvertiser
         }
-    }
-
-    /**
-     * Required for extending service, but this will be a Started Service only, so no need for
-     * binding.
-     */
-    override fun onBind(intent: android.content.Intent?): android.os.IBinder? {
-        return null
     }
 
     companion object {
@@ -112,5 +117,20 @@ class PeripheralAdvertiseService(
          * Length of time to advertise for, in milliseconds.
          */
         private var TIMEOUT = TimeUnit.MILLISECONDS.convert(10, TimeUnit.MINUTES)
+
+        private fun buildAdvertiseData(): AdvertiseData {
+            return AdvertiseData.Builder()
+                .addServiceUuid(ParcelUuid(Constants.UUID_MY_SERVICE))
+                .setIncludeDeviceName(true)
+                .build()
+        }
+
+        private fun buildAdvertiseSettings(): AdvertiseSettings {
+            return AdvertiseSettings.Builder()
+                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER)
+                .setConnectable(true)
+                .setTimeout(0)
+                .build()
+        }
     }
 }

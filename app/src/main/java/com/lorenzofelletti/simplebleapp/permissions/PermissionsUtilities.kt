@@ -86,6 +86,45 @@ object PermissionsUtilities {
     }
 
     /**
+     * Checks the result of a permission request, and dispatches the appropriate action
+     *
+     * @param requestCode The request code of the permission request
+     * @param permissions The permissions that were requested
+     * @param grantResults The results of the permission request
+     * @param onGrantedMap maps the request code to the action to be performed if the permissions are granted
+     * @param onDeniedMap maps the request code to the action to be performed if the permissions are not granted
+     */
+    fun dispatchOnRequestPermissionsResult(
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray,
+        onGrantedMap: Map<Int, () -> Unit>, onDeniedMap: Map<Int, () -> Unit>
+    ) {
+        when (checkRequestedPermissionsResults(permissions, grantResults)) {
+            true -> {
+                if (DEBUG) {
+                    Log.d(
+                        TAG,
+                        "${::dispatchOnRequestPermissionsResult.name} - $permissions granted!"
+                    )
+                }
+
+                // Dispatches what to do after the permissions are granted
+                onGrantedMap[requestCode]?.invoke()
+            }
+            false -> {
+                if (DEBUG) {
+                    Log.d(
+                        TAG,
+                        "${::dispatchOnRequestPermissionsResult.name} - some permissions in $permissions were not granted"
+                    )
+                }
+
+                // Dispatches what to do after the permissions are denied
+                onDeniedMap[requestCode]?.invoke()
+            }
+        }
+    }
+
+    /**
      * Checks whether a permission is granted in the context
      *
      * @param context The context to be used for checking the permission
