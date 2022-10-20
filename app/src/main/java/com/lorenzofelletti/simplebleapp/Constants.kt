@@ -1,4 +1,4 @@
-package com.lorenzofelletti.simplebleapp.ble.gattserver.model
+package com.lorenzofelletti.simplebleapp
 
 import java.util.UUID
 

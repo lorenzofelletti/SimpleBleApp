@@ -14,8 +14,9 @@ import android.os.Looper
 import android.os.ParcelUuid
 import android.util.Log
 import androidx.annotation.RequiresPermission
+import com.lorenzofelletti.simplebleapp.BuildConfig
 import com.lorenzofelletti.simplebleapp.ble.gattserver.model.BleAdvertiseCallback
-import com.lorenzofelletti.simplebleapp.ble.gattserver.model.Constants
+import com.lorenzofelletti.simplebleapp.Constants
 import java.util.concurrent.TimeUnit
 
 /**
@@ -54,8 +55,6 @@ class PeripheralAdvertiseService(
     override fun onDestroy() {
         running = false
 
-        onServiceStopActions.forEach { it() }
-
         stopAdvertising()
         handler.removeCallbacks(timeoutRunnable)
         stopForeground(true)
@@ -78,6 +77,9 @@ class PeripheralAdvertiseService(
         if (DEBUG) Log.d(TAG, "${::stopAdvertising.name} - Stopping advertising")
 
         bluetoothLeAdvertiser.stopAdvertising(advertiseCallback)
+
+        onServiceStopActions.forEach { it() }
+        onServiceStopActions.clear()
 
         advertiseCallback = null
     }
@@ -111,7 +113,7 @@ class PeripheralAdvertiseService(
 
     companion object {
         private val TAG = PeripheralAdvertiseService::class.java.simpleName
-        private val DEBUG = com.lorenzofelletti.simplebleapp.BuildConfig.DEBUG
+        private val DEBUG = BuildConfig.DEBUG
 
         /**
          * Length of time to advertise for, in milliseconds.

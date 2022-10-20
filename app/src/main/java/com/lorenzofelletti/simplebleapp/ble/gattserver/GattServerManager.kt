@@ -26,7 +26,7 @@ class GattServerManager(
     @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
     fun addService(service: BluetoothGattService) {
         servicesMap[service.uuid] = service
-        gattServerCallback.bluetoothGattServer?.addService(service)
+        bluetoothGattServer?.addService(service)
     }
 
     fun addCharacteristicToService(serviceUUID: UUID, characteristic: BluetoothGattCharacteristic) {
@@ -36,7 +36,7 @@ class GattServerManager(
 
     @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
     fun stopGattServer() {
-        gattServerCallback.bluetoothGattServer?.close()
+        bluetoothGattServer?.close()
     }
 
     /**
@@ -46,7 +46,7 @@ class GattServerManager(
     fun <T> setCharacteristic(characteristicUUID: UUID, value: T) {
         val characteristic = characteristicsMap[characteristicUUID]
         if (characteristic != null) {
-            characteristic.value = CharacteristicUtilities.getValueAsByteArray(value)
+            characteristic.value = getValueAsByteArray(value)
             notifyCharacteristicChanged(characteristic)
         }
     }
