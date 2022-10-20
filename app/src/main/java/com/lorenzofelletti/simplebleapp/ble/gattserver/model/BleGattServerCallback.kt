@@ -11,9 +11,8 @@ import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.lorenzofelletti.simplebleapp.BuildConfig
 
-class BleGattServerCallback : BluetoothGattServerCallback() {
+class BleGattServerCallback(private val bluetoothConnectedDevices: MutableSet<BluetoothDevice>) : BluetoothGattServerCallback() {
     var bluetoothGattServer: BluetoothGattServer? = null
-    private val bluetoothConnectedDevices: MutableSet<BluetoothDevice> = mutableSetOf()
 
     override fun onConnectionStateChange(device: BluetoothDevice?, status: Int, newState: Int) {
         super.onConnectionStateChange(device, status, newState)

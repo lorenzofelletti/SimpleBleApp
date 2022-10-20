@@ -13,6 +13,7 @@ import com.lorenzofelletti.simplebleapp.ble.gattserver.CharacteristicUtilities
 import com.lorenzofelletti.simplebleapp.ble.gattserver.PeripheralAdvertiseService
 import com.lorenzofelletti.simplebleapp.ble.gattserver.model.BleGattServerCallback
 import com.lorenzofelletti.simplebleapp.ble.gattserver.model.Constants.UUID_MY_CHARACTERISTIC
+import com.lorenzofelletti.simplebleapp.ble.gattserver.model.Constants.UUID_MY_DESCRIPTOR
 import com.lorenzofelletti.simplebleapp.ble.gattserver.model.Constants.UUID_MY_SERVICE
 import com.lorenzofelletti.simplebleapp.permissions.AppRequiredPermissions
 import com.lorenzofelletti.simplebleapp.permissions.PermissionsUtilities
@@ -26,6 +27,8 @@ class MainActivity : AppCompatActivity() {
     private var bluetoothGattServer: BluetoothGattServer? = null
     private var myService: BluetoothGattService? = null
     private var myCharacteristic: BluetoothGattCharacteristic? = null
+
+    private var bluetoothConnectedDevices: MutableSet<BluetoothDevice> = mutableSetOf()
 
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,6 +64,8 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, "Stopping the GATT server", Toast.LENGTH_SHORT).show()
 
                     stopAdvertising()
+
+                    bluetoothConnectedDevices.clear()
                 })
         )
     }
@@ -122,25 +127,49 @@ class MainActivity : AppCompatActivity() {
             BluetoothGattCharacteristic.PERMISSION_READ
         )
 
-        setCharacteristic("Hello World!")
+        val myDescriptor = BluetoothGattDescriptor(
+            UUID_MY_DESCRIPTOR,
+            BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_WRITE
+        )
+        myCharacteristic?.descriptors?.add(myDescriptor)
+
+        setCharacteristic(myCharacteristic!!, 0)
 
         myService?.addCharacteristic(myCharacteristic)
 
         bluetoothGattServer?.addService(myService)
     }
 
-    private fun <T> setCharacteristic(value: T) {
-        myCharacteristic?.value = CharacteristicUtilities.getValueAsByteArray(value)
-    }
-
-
     @SuppressLint("MissingPermission")
     private fun setGattServer() {
-        val callback = BleGattServerCallback()
+        val callback = BleGattServerCallback(bluetoothConnectedDevices)
 
         bluetoothGattServer = btManager.openGattServer(this, callback)
 
         callback.bluetoothGattServer = bluetoothGattServer
+    }
+
+    /**
+     * Sets the value of the characteristic.
+     */
+    @SuppressLint("MissingPermission")
+    private fun <T> setCharacteristic(characteristic: BluetoothGattCharacteristic, value: T) {
+        characteristic.value = CharacteristicUtilities.getValueAsByteArray(value)
+
+        notifyCharacteristicChanged(characteristic)
+    }
+
+    /**
+     * Notifies the connected devices that the characteristic has changed.
+     */
+    @SuppressLint("MissingPermission")
+    private fun notifyCharacteristicChanged(
+        characteristic: BluetoothGattCharacteristic,
+        confirm: Boolean = false
+    ) {
+        bluetoothConnectedDevices.forEach {
+            bluetoothGattServer?.notifyCharacteristicChanged(it, characteristic, confirm)
+        }
     }
 
     /**

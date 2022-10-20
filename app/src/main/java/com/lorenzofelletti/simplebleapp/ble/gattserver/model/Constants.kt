@@ -3,11 +3,11 @@ package com.lorenzofelletti.simplebleapp.ble.gattserver.model
 import java.util.UUID
 
 object Constants {
-    val UUID_MY_SERVICE: UUID = UUID.fromString("23782c92-139c-4846-aac5-31d1b078d439")
+    val UUID_MY_SERVICE: UUID = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb")
 
     val UUID_MY_CHARACTERISTIC: UUID =
-        UUID.fromString("23782c92-139c-4846-aac5-31d1b078d440")
+        UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb")
 
     val UUID_MY_DESCRIPTOR: UUID =
-        UUID.fromString("23782c92-139c-4846-aac5-31d1b078d441")
+        UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 }
