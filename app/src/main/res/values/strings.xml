@@ -5,4 +5,5 @@
     <string name="btn_start_server_text">Start Server</string>
     <string name="stop_server">Stop Server</string>
     <string name="start_server">Start Server</string>
+    <string name="ble_advertising_service_description">BLE Advertising Service</string>
 </resources>

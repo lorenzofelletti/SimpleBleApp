@@ -26,23 +26,28 @@ class MainActivity : AppCompatActivity() {
 
     /** Defines callbacks for service binding, passed to bindService()  */
     private val connection = object : ServiceConnection {
-
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            if (DEBUG) Log.d(this::class.java.simpleName, "onServiceConnected")
+
             val binder = service as PeripheralAdvertiseService.PeripheralAdvertiseBinder
             advertisingService = binder.getService()
             bound = true
 
-            advertisingService.onServiceStopActions.add {
-                bound = false
-                updateBtnStartServerText()
-            }
+            advertisingService.onServiceStopActions.add { disconnectFromService() }
 
             updateBtnStartServerText()
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
+            if (DEBUG) Log.d(this::class.java.simpleName, "onServiceDisconnected")
+
+            disconnectFromService()
+        }
+
+        private fun disconnectFromService() {
             bound = false
             updateBtnStartServerText()
+            stopGattServer()
         }
     }
 
@@ -62,8 +67,8 @@ class MainActivity : AppCompatActivity() {
         // Adding the onclick listener to the start server button
         btnStartServer = findViewById(R.id.btn_start_server)
 
-        btnStartServer.setOnClickListener(
-            startServerOnClickListenerBuilder(startServerAction = {
+        btnStartServer.setOnClickListener {
+            if (!bound) {
                 Toast.makeText(this, "Starting the GATT server", Toast.LENGTH_SHORT).show()
 
                 /* Checks if the required permissions are granted and starts the GATT server,
@@ -72,18 +77,18 @@ class MainActivity : AppCompatActivity() {
                     this, AppRequiredPermissions.permissions
                 )) {
                     true -> {
-                        startGattServer()
+                        bindToAdvertiseService()
                     }
                     false -> PermissionsUtilities.checkPermissions(
                         this, AppRequiredPermissions.permissions, BLE_SERVER_REQUEST_CODE
                     )
                 }
-            }, stopServerAction = {
+            } else {
                 Toast.makeText(this, "Stopping the GATT server", Toast.LENGTH_SHORT).show()
 
-                stopGattServer()
-            })
-        )
+                unbindFromAdvertiseService()
+            }
+        }
     }
 
     override fun onStop() {
@@ -103,20 +108,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun unbindFromAdvertiseService() {
         if (DEBUG) Log.d(TAG, "Unbinding from the Advertise Service")
-        unbindService(connection)
-        bound = false
+
+        if (bound) {
+            unbindService(connection)
+            bound = false
+        }
     }
 
-    /**
-     * Starts the GATT server.
-     *
-     * It starts the advertising service and creates the GATT server.
-     */
     @SuppressLint("MissingPermission")
     private fun startGattServer() {
-        //startAdvertising()
-        bindToAdvertiseService()
-
         //setGattServer()
         gattServerManager.startGattServer()
 
@@ -126,9 +126,6 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("MissingPermission")
     private fun stopGattServer() {
         gattServerManager.stopGattServer()
-
-        // stop advertising
-        unbindFromAdvertiseService()
     }
 
     /**
@@ -148,7 +145,8 @@ class MainActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
-        dispatchOnRequestPermissionsResult(requestCode,
+        dispatchOnRequestPermissionsResult(
+            requestCode,
             permissions,
             grantResults,
             onGrantedMap = mapOf(BLE_SERVER_REQUEST_CODE to {
