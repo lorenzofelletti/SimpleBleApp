@@ -21,6 +21,7 @@ import com.lorenzofelletti.simplebleapp.permissions.PermissionsUtilities.dispatc
 class MainActivity : AppCompatActivity() {
     private lateinit var btnStartServer: Button
 
+    private lateinit var gattServerManager: GattServerManager
     private lateinit var advertisingService: PeripheralAdvertiseService
     private var bound = false
 
@@ -51,17 +52,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private lateinit var btManager: BluetoothManager
-    private lateinit var btAdapter: BluetoothAdapter
-    private lateinit var gattServerManager: GattServerManager
-
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        btManager = getSystemService(BluetoothManager::class.java)
-        btAdapter = btManager.adapter
+        val btManager = getSystemService(BluetoothManager::class.java)
         gattServerManager = GattServerManager(this, btManager)
 
         // Adding the onclick listener to the start server button
@@ -147,7 +143,6 @@ class MainActivity : AppCompatActivity() {
 
         dispatchOnRequestPermissionsResult(
             requestCode,
-            permissions,
             grantResults,
             onGrantedMap = mapOf(BLE_SERVER_REQUEST_CODE to {
                 bindToAdvertiseService()

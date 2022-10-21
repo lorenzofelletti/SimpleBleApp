@@ -39,38 +39,6 @@ object PermissionsUtilities {
     }
 
     /**
-     * Function that checks whether the permission was granted or not
-     *
-     * @param permissions The permissions that were requested
-     * @param grantResults The results of the permission request
-     *
-     * @return true if all permissions were granted, false otherwise
-     */
-    fun checkRequestedPermissionsResults(
-        permissions: Array<out String>, grantResults: IntArray
-    ): Boolean {
-        var res = true
-        for (result in grantResults) {
-            when (result) {
-                PackageManager.PERMISSION_GRANTED -> {
-                    if (DEBUG) {
-                        permissions.forEach {
-                            Log.d(TAG, "${::checkRequestedPermissionsResults.name} - $it granted")
-                        }
-                    }
-                }
-                else -> {
-                    if (DEBUG) Log.d(
-                        TAG, "${::checkRequestedPermissionsResults.name} - $permissions not granted"
-                    )
-                    res = false
-                }
-            }
-        }
-        return res
-    }
-
-    /**
      * Checks whether a set of permissions is granted or not
      *
      * @param context The context to be used for checking the permissions
@@ -89,21 +57,20 @@ object PermissionsUtilities {
      * Checks the result of a permission request, and dispatches the appropriate action
      *
      * @param requestCode The request code of the permission request
-     * @param permissions The permissions that were requested
      * @param grantResults The results of the permission request
      * @param onGrantedMap maps the request code to the action to be performed if the permissions are granted
      * @param onDeniedMap maps the request code to the action to be performed if the permissions are not granted
      */
     fun dispatchOnRequestPermissionsResult(
-        requestCode: Int, permissions: Array<out String>, grantResults: IntArray,
+        requestCode: Int, grantResults: IntArray,
         onGrantedMap: Map<Int, () -> Unit>, onDeniedMap: Map<Int, () -> Unit>
     ) {
-        when (checkRequestedPermissionsResults(permissions, grantResults)) {
+        when (checkGrantResults(grantResults)) {
             true -> {
                 if (DEBUG) {
                     Log.d(
                         TAG,
-                        "${::dispatchOnRequestPermissionsResult.name} - $permissions granted!"
+                        "${::dispatchOnRequestPermissionsResult.name} - permissions for request code $requestCode granted!"
                     )
                 }
 
@@ -114,7 +81,7 @@ object PermissionsUtilities {
                 if (DEBUG) {
                     Log.d(
                         TAG,
-                        "${::dispatchOnRequestPermissionsResult.name} - some permissions in $permissions were not granted"
+                        "${::dispatchOnRequestPermissionsResult.name} - some permissions for request code $requestCode were not granted"
                     )
                 }
 
@@ -136,5 +103,19 @@ object PermissionsUtilities {
         return ActivityCompat.checkSelfPermission(
             context, permission
         ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    /**
+     * Checks the results of a permission request
+     *
+     * @param grantResults The results of the permission request
+     *
+     * @return true if all permissions were granted, false otherwise
+     */
+    private fun checkGrantResults(grantResults: IntArray): Boolean {
+        for (result in grantResults) {
+            if (result != PackageManager.PERMISSION_GRANTED) return false
+        }
+        return true
     }
 }
