@@ -69,8 +69,6 @@ class MainActivity : AppCompatActivity() {
 
         btnStartServer.setOnClickListener {
             if (!bound) {
-                Toast.makeText(this, "Starting the GATT server", Toast.LENGTH_SHORT).show()
-
                 /* Checks if the required permissions are granted and starts the GATT server,
                  * requesting them otherwise. */
                 when (PermissionsUtilities.checkPermissionsGranted(
@@ -84,8 +82,6 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
             } else {
-                Toast.makeText(this, "Stopping the GATT server", Toast.LENGTH_SHORT).show()
-
                 unbindFromAdvertiseService()
             }
         }
@@ -100,6 +96,8 @@ class MainActivity : AppCompatActivity() {
         if (DEBUG) Log.d(TAG, "Binding to the Advertise Service")
 
         if (!bound) {
+            Toast.makeText(this, "Starting the GATT server", Toast.LENGTH_SHORT).show()
+
             Intent(this, PeripheralAdvertiseService::class.java).also { intent ->
                 bindService(intent, connection, Context.BIND_AUTO_CREATE)
             }
@@ -110,6 +108,8 @@ class MainActivity : AppCompatActivity() {
         if (DEBUG) Log.d(TAG, "Unbinding from the Advertise Service")
 
         if (bound) {
+            Toast.makeText(this, "Stopping the GATT server", Toast.LENGTH_SHORT).show()
+
             unbindService(connection)
             bound = false
         }
@@ -150,7 +150,7 @@ class MainActivity : AppCompatActivity() {
             permissions,
             grantResults,
             onGrantedMap = mapOf(BLE_SERVER_REQUEST_CODE to {
-                startGattServer()
+                bindToAdvertiseService()
             }),
             onDeniedMap = mapOf(BLE_SERVER_REQUEST_CODE to {
                 Toast.makeText(
