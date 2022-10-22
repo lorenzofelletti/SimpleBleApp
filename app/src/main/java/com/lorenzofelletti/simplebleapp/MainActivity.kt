@@ -23,11 +23,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var gattServerManager: GattServerManager
 
     /** Defines callbacks for service binding, passed to bindService()  */
-    private val connection = BleServiceConnection.create(
-        commonActions = listOf(::updateBtnStartServerText, ::changeNotificationBtnEnableState),
-        onServiceConnectedActions = listOf(::startGattServer),
-        onServiceDisconnectedActions = listOf(::stopGattServer)
-    )
+    private val connection = BleServiceConnection.Builder()
+        .addCommonActions(::updateBtnStartServerText, ::changeNotificationBtnEnableState)
+        .addOnServiceConnectedActions(::startGattServer)
+        .addOnServiceDisconnectedActions(::stopGattServer).build()
 
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
