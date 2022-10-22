@@ -16,22 +16,24 @@ import com.lorenzofelletti.simplebleapp.BuildConfig
  *
  * @param bluetoothConnectedDevices A reference to the list of connected devices.
  */
-class BleGattServerCallback(private val bluetoothConnectedDevices: MutableSet<BluetoothDevice>) : BluetoothGattServerCallback() {
+class BleGattServerCallback(private val bluetoothConnectedDevices: MutableSet<BluetoothDevice>) :
+    BluetoothGattServerCallback() {
     var bluetoothGattServer: BluetoothGattServer? = null
 
     override fun onConnectionStateChange(device: BluetoothDevice?, status: Int, newState: Int) {
         super.onConnectionStateChange(device, status, newState)
 
-        if (DEBUG) Log.i(
-            TAG, "${::onConnectionStateChange.name} - BluetoothDevice CONNECTED: $device"
-        )
-
         if (status == BluetoothGatt.GATT_SUCCESS) {
             when (newState) {
                 BluetoothGatt.STATE_CONNECTED -> {
-                    bluetoothConnectedDevices.add(device!!)
+                    if (DEBUG) Log.i(
+                        TAG, "${::onConnectionStateChange.name} - BluetoothDevice CONNECTED: $device"
+                    )
                 }
                 BluetoothGatt.STATE_DISCONNECTED -> {
+                    if (DEBUG) Log.i(
+                        TAG, "${::onConnectionStateChange.name} - BluetoothDevice DISCONNECTED: $device"
+                    )
                     bluetoothConnectedDevices.remove(device!!)
                 }
             }
@@ -54,7 +56,7 @@ class BleGattServerCallback(private val bluetoothConnectedDevices: MutableSet<Bl
         super.onServiceAdded(status, service)
 
         if (DEBUG) Log.i(
-            TAG, "${::onServiceAdded.name} - BluetoothGattService ADDED: $service"
+            TAG, "${::onServiceAdded.name} - BluetoothGattService ADDED: ${service?.uuid}"
         )
     }
 
@@ -67,7 +69,7 @@ class BleGattServerCallback(private val bluetoothConnectedDevices: MutableSet<Bl
     ) {
         if (DEBUG) Log.i(
             TAG,
-            "${::onCharacteristicReadRequest.name} - Read request for characteristic: $characteristic"
+            "${::onCharacteristicReadRequest.name} - Read request for characteristic: ${characteristic?.uuid}"
         )
 
         bluetoothGattServer?.sendResponse(
@@ -87,7 +89,7 @@ class BleGattServerCallback(private val bluetoothConnectedDevices: MutableSet<Bl
     ) {
         if (DEBUG) Log.i(
             TAG,
-            "${::onCharacteristicWriteRequest.name} - Write request for characteristic: $characteristic"
+            "${::onCharacteristicWriteRequest.name} - Write request for characteristic: ${characteristic?.uuid}"
         )
 
         var success = false
@@ -108,6 +110,32 @@ class BleGattServerCallback(private val bluetoothConnectedDevices: MutableSet<Bl
     }
 
     @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
+    override fun onDescriptorReadRequest(
+        device: BluetoothDevice?,
+        requestId: Int,
+        offset: Int,
+        descriptor: BluetoothGattDescriptor?
+    ) {
+        if (DEBUG) Log.i(
+            TAG,
+            "${::onDescriptorReadRequest.name} - Read request for descriptor: ${descriptor?.uuid}"
+        )
+
+        val returnValue = if (bluetoothConnectedDevices.contains(device)) {
+            BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+        } else {
+            BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+        }
+        bluetoothGattServer?.sendResponse(
+            device,
+            requestId,
+            BluetoothGatt.GATT_SUCCESS,
+            0,
+            returnValue
+        )
+    }
+
+    @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
     override fun onDescriptorWriteRequest(
         device: BluetoothDevice?,
         requestId: Int,
@@ -118,14 +146,21 @@ class BleGattServerCallback(private val bluetoothConnectedDevices: MutableSet<Bl
         value: ByteArray?
     ) {
         if (DEBUG) Log.i(
-            TAG, "${::onDescriptorWriteRequest.name} - Write request for descriptor: $descriptor"
+            TAG,
+            "${::onDescriptorWriteRequest.name} - Write request for descriptor: ${descriptor?.uuid}"
         )
+
+        // This is called when a client subscribes or unsubscribes to notifications/indications
+        if (bluetoothConnectedDevices.contains(device))
+            bluetoothConnectedDevices.remove(device!!)
+        else
+            bluetoothConnectedDevices.add(device!!)
 
         if (responseNeeded) {
             bluetoothGattServer?.sendResponse(
                 device,
                 requestId,
-                BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED,
+                BluetoothGatt.GATT_SUCCESS,
                 0,
                 value
             )

@@ -48,8 +48,10 @@ class GattServerManager(
     @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
     fun stopGattServer() {
         if (DEBUG) Log.i(TAG, "Stopping GattServer")
-
         bluetoothGattServer?.close()
+        bluetoothConnectedDevices.clear()
+        servicesMap.clear()
+        characteristicsMap.clear()
     }
 
     /**
@@ -64,6 +66,10 @@ class GattServerManager(
 
         val characteristic = characteristicsMap[characteristicUUID]
         if (characteristic != null) {
+            if (DEBUG) Log.i(
+                TAG,
+                "setCharacteristic - setting characteristic ${characteristic.uuid} value"
+            )
             characteristic.value = getValueAsByteArray(value)
             notifyCharacteristicChanged(characteristic)
         }

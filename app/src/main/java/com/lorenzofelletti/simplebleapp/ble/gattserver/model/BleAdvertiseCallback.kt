@@ -1,12 +1,15 @@
 package com.lorenzofelletti.simplebleapp.ble.gattserver.model
 
 import com.lorenzofelletti.simplebleapp.BuildConfig
+import android.bluetooth.le.AdvertiseCallback
+import android.bluetooth.le.AdvertiseSettings
+
 
 class BleAdvertiseCallback(
     private val doOnStartSuccess: () -> Unit = {},
     private val doOnStartFailure: () -> Unit = {},
-) : android.bluetooth.le.AdvertiseCallback() {
-    override fun onStartSuccess(settingsInEffect: android.bluetooth.le.AdvertiseSettings?) {
+) : AdvertiseCallback() {
+    override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
         super.onStartSuccess(settingsInEffect)
 
         if (DEBUG) android.util.Log.d(TAG, "${::onStartSuccess.name} - LE Advertise Started")

@@ -56,7 +56,7 @@ fun setBluetoothService(gattServerManager: GattServerManager) {
     )
 
     val myDescriptor = BluetoothGattDescriptor(
-        Constants.UUID_MY_DESCRIPTOR, BluetoothGattDescriptor.PERMISSION_READ
+        Constants.UUID_MY_DESCRIPTOR, BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_WRITE
     )
     myCharacteristic.descriptors?.add(myDescriptor)
 
@@ -65,5 +65,4 @@ fun setBluetoothService(gattServerManager: GattServerManager) {
 
     gattServerManager.addService(myService)
     gattServerManager.addCharacteristicToService(myService.uuid, myCharacteristic)
-    gattServerManager.setCharacteristic(myCharacteristic.uuid, "Hello World!")
 }

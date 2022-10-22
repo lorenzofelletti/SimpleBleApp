@@ -20,6 +20,7 @@ import com.lorenzofelletti.simplebleapp.permissions.PermissionsUtilities.dispatc
 
 class MainActivity : AppCompatActivity() {
     private lateinit var btnStartServer: Button
+    private lateinit var btnSendNotification: Button
 
     private lateinit var gattServerManager: GattServerManager
     private lateinit var advertisingService: PeripheralAdvertiseService
@@ -36,7 +37,8 @@ class MainActivity : AppCompatActivity() {
 
             advertisingService.onServiceStopActions.add { disconnectFromService() }
 
-            updateBtnStartServerText()
+            guiUpdate()
+            startGattServer()
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -45,9 +47,14 @@ class MainActivity : AppCompatActivity() {
             disconnectFromService()
         }
 
+        private fun guiUpdate() {
+            updateBtnStartServerText()
+            changeNotificationBtnEnableState()
+        }
+
         private fun disconnectFromService() {
             bound = false
-            updateBtnStartServerText()
+            guiUpdate()
             stopGattServer()
         }
     }
@@ -57,12 +64,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        btnStartServer = findViewById(R.id.btn_start_server)
+        btnSendNotification = findViewById(R.id.btn_send_notification)
+
         val btManager = getSystemService(BluetoothManager::class.java)
         gattServerManager = GattServerManager(this, btManager)
 
         // Adding the onclick listener to the start server button
-        btnStartServer = findViewById(R.id.btn_start_server)
-
         btnStartServer.setOnClickListener {
             if (!bound) {
                 /* Checks if the required permissions are granted and starts the GATT server,
@@ -80,6 +88,10 @@ class MainActivity : AppCompatActivity() {
             } else {
                 unbindFromAdvertiseService()
             }
+        }
+
+        btnSendNotification.setOnClickListener {
+            gattServerManager.setCharacteristic(Constants.UUID_MY_CHARACTERISTIC, "hello.sh")
         }
     }
 
@@ -131,6 +143,10 @@ class MainActivity : AppCompatActivity() {
         if (DEBUG) Log.d(TAG, "Updating the start server button text")
 
         btnStartServer.setText(if (bound) R.string.stop_server else R.string.start_server)
+    }
+
+    private fun changeNotificationBtnEnableState() {
+        btnSendNotification.isEnabled = bound
     }
 
     /**
