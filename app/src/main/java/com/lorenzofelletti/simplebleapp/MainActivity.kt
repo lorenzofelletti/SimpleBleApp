@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.util.Log
+import android.widget.EditText
 import android.widget.Toast
 import com.lorenzofelletti.simplebleapp.ble.gattserver.GattServerManager
 import com.lorenzofelletti.simplebleapp.ble.gattserver.PeripheralAdvertiseService
@@ -19,6 +20,7 @@ import com.lorenzofelletti.simplebleapp.permissions.PermissionsUtilities.dispatc
 class MainActivity : AppCompatActivity() {
     private lateinit var btnStartServer: Button
     private lateinit var btnSendNotification: Button
+    private lateinit var etScriptName: EditText
 
     private lateinit var gattServerManager: GattServerManager
 
@@ -35,6 +37,7 @@ class MainActivity : AppCompatActivity() {
 
         btnStartServer = findViewById(R.id.btn_start_server)
         btnSendNotification = findViewById(R.id.btn_send_notification)
+        etScriptName = findViewById(R.id.et_script_name)
 
         val btManager = getSystemService(BluetoothManager::class.java)
         gattServerManager = GattServerManager(this, btManager)
@@ -60,7 +63,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnSendNotification.setOnClickListener {
-            gattServerManager.setCharacteristic(Constants.UUID_MY_CHARACTERISTIC, "hello.sh")
+            val scriptName = etScriptName.text.toString()
+            gattServerManager.setCharacteristic(Constants.UUID_MY_CHARACTERISTIC, scriptName)
         }
     }
 

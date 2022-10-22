@@ -7,4 +7,6 @@
     <string name="start_server">Start Server</string>
     <string name="ble_advertising_service_description">BLE Advertising Service</string>
     <string name="send_notification_btn">Send Notification</string>
+    <string name="insert_script_name">Insert Script Name</string>
+    <string name="default_script">hello.sh</string>
 </resources>
