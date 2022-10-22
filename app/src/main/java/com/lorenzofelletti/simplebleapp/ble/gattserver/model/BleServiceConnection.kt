@@ -42,10 +42,15 @@ class BleServiceConnection : ServiceConnection {
         private val DEBUG = BuildConfig.DEBUG
 
         fun create(
-            onServiceConnectedActions: List<() -> Unit>,
-            onServiceDisconnectedActions: List<() -> Unit>,
+            commonActions: List<() -> Unit> = listOf(),
+            onServiceConnectedActions: List<() -> Unit> = listOf(),
+            onServiceDisconnectedActions: List<() -> Unit> = listOf(),
         ): BleServiceConnection {
             val connection = BleServiceConnection()
+
+            connection.onServiceConnectedActions.addAll(commonActions)
+            connection.onServiceDisconnectedActions.addAll(commonActions)
+
             connection.onServiceConnectedActions.addAll(onServiceConnectedActions)
             connection.onServiceDisconnectedActions.addAll(onServiceDisconnectedActions)
             return connection

@@ -2,18 +2,16 @@ package com.lorenzofelletti.simplebleapp
 
 import android.annotation.SuppressLint
 import android.bluetooth.*
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.IBinder
 import android.widget.Button
 import android.util.Log
 import android.widget.Toast
 import com.lorenzofelletti.simplebleapp.ble.gattserver.GattServerManager
 import com.lorenzofelletti.simplebleapp.ble.gattserver.PeripheralAdvertiseService
+import com.lorenzofelletti.simplebleapp.ble.gattserver.model.BleServiceConnection
 import com.lorenzofelletti.simplebleapp.permissions.AppRequiredPermissions
 import com.lorenzofelletti.simplebleapp.permissions.PermissionsUtilities
 import com.lorenzofelletti.simplebleapp.permissions.PermissionsUtilities.dispatchOnRequestPermissionsResult
@@ -23,41 +21,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnSendNotification: Button
 
     private lateinit var gattServerManager: GattServerManager
-    private lateinit var advertisingService: PeripheralAdvertiseService
-    private var bound = false
 
     /** Defines callbacks for service binding, passed to bindService()  */
-    private val connection = object : ServiceConnection {
-        override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            if (DEBUG) Log.d(this::class.java.simpleName, "onServiceConnected")
-
-            val binder = service as PeripheralAdvertiseService.PeripheralAdvertiseBinder
-            advertisingService = binder.getService()
-            bound = true
-
-            advertisingService.onServiceStopActions.add { disconnectFromService() }
-
-            guiUpdate()
-            startGattServer()
-        }
-
-        override fun onServiceDisconnected(arg0: ComponentName) {
-            if (DEBUG) Log.d(this::class.java.simpleName, "onServiceDisconnected")
-
-            disconnectFromService()
-        }
-
-        private fun guiUpdate() {
-            updateBtnStartServerText()
-            changeNotificationBtnEnableState()
-        }
-
-        private fun disconnectFromService() {
-            bound = false
-            guiUpdate()
-            stopGattServer()
-        }
-    }
+    private val connection = BleServiceConnection.create(
+        commonActions = listOf(::updateBtnStartServerText, ::changeNotificationBtnEnableState),
+        onServiceConnectedActions = listOf(::startGattServer),
+        onServiceDisconnectedActions = listOf(::stopGattServer)
+    )
 
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,7 +42,7 @@ class MainActivity : AppCompatActivity() {
 
         // Adding the onclick listener to the start server button
         btnStartServer.setOnClickListener {
-            if (!bound) {
+            if (!connection.bound) {
                 /* Checks if the required permissions are granted and starts the GATT server,
                  * requesting them otherwise. */
                 when (PermissionsUtilities.checkPermissionsGranted(
@@ -103,7 +73,7 @@ class MainActivity : AppCompatActivity() {
     private fun bindToAdvertiseService() {
         if (DEBUG) Log.d(TAG, "Binding to the Advertise Service")
 
-        if (!bound) {
+        if (!connection.bound) {
             Toast.makeText(this, "Starting the GATT server", Toast.LENGTH_SHORT).show()
 
             Intent(this, PeripheralAdvertiseService::class.java).also { intent ->
@@ -115,11 +85,11 @@ class MainActivity : AppCompatActivity() {
     private fun unbindFromAdvertiseService() {
         if (DEBUG) Log.d(TAG, "Unbinding from the Advertise Service")
 
-        if (bound) {
+        if (connection.bound) {
             Toast.makeText(this, "Stopping the GATT server", Toast.LENGTH_SHORT).show()
 
             unbindService(connection)
-            bound = false
+            //bound = false
         }
     }
 
@@ -142,11 +112,11 @@ class MainActivity : AppCompatActivity() {
     private fun updateBtnStartServerText() {
         if (DEBUG) Log.d(TAG, "Updating the start server button text")
 
-        btnStartServer.setText(if (bound) R.string.stop_server else R.string.start_server)
+        btnStartServer.setText(if (connection.bound) R.string.stop_server else R.string.start_server)
     }
 
     private fun changeNotificationBtnEnableState() {
-        btnSendNotification.isEnabled = bound
+        btnSendNotification.isEnabled = connection.bound
     }
 
     /**
