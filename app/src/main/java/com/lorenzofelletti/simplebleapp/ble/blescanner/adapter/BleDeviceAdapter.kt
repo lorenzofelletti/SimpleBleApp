@@ -29,7 +29,7 @@ class BleDeviceAdapter(private val devices: List<BleDevice>) : RecyclerView.Adap
     override fun onBindViewHolder(holder: BleDeviceAdapter.ViewHolder, position: Int) {
         val device = devices[position]
         val textView = holder.deviceNameTextView
-        textView.text = device.name
+        textView.text = device.address
     }
 
     override fun getItemCount(): Int {

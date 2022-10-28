@@ -6,16 +6,20 @@ import android.bluetooth.*
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.lorenzofelletti.simplebleapp.BuildConfig
+import com.lorenzofelletti.simplebleapp.ble.gattserver.adapter.ConnectedDeviceAdapter
 import com.lorenzofelletti.simplebleapp.ble.gattserver.model.BleGattServerCallback
 import java.util.UUID
 
 class GattServerManager(
     private val activity: Activity,
-    private val bluetoothManager: BluetoothManager
+    private val bluetoothManager: BluetoothManager,
 ) {
-    private val bluetoothConnectedDevices: MutableSet<BluetoothDevice> = mutableSetOf()
-    private val gattServerCallback = BleGattServerCallback(bluetoothConnectedDevices)
+    private val bluetoothConnectedDevices: MutableMap<BluetoothDevice, Boolean> = mutableMapOf()
+    val connectedDeviceAdapter = ConnectedDeviceAdapter(bluetoothConnectedDevices)
+
+    private val gattServerCallback = BleGattServerCallback(bluetoothConnectedDevices, connectedDeviceAdapter)
     private var bluetoothGattServer: BluetoothGattServer? = null
+
     private val servicesMap: MutableMap<UUID, BluetoothGattService> = mutableMapOf()
     private val characteristicsMap: MutableMap<UUID, BluetoothGattCharacteristic> = mutableMapOf()
 
@@ -49,7 +53,7 @@ class GattServerManager(
     fun stopGattServer() {
         if (DEBUG) Log.i(TAG, "Stopping GattServer")
         bluetoothGattServer?.close()
-        bluetoothConnectedDevices.clear()
+        connectedDeviceAdapter.clearDevices()
         servicesMap.clear()
         characteristicsMap.clear()
     }
@@ -88,7 +92,7 @@ class GattServerManager(
         )
 
         bluetoothConnectedDevices.forEach {
-            bluetoothGattServer?.notifyCharacteristicChanged(it, characteristic, confirm)
+            bluetoothGattServer?.notifyCharacteristicChanged(it.key, characteristic, confirm)
         }
     }
 

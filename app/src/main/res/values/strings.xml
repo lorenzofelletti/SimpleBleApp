@@ -1,7 +1,8 @@
 <resources>
     <string name="app_name">SimpleBleApp</string>
     <string name="btn_start_scan_text">Start Scan</string>
-    <string name="tw_scan_results_title">Scan Results</string>
+    <string name="tv_scan_results_title">Scan Results</string>
+    <string name="tv_connected_devices">Connected Devices</string>
     <string name="btn_start_server_text">Start Server</string>
     <string name="stop_server">Stop Server</string>
     <string name="start_server">Start Server</string>
@@ -9,4 +10,5 @@
     <string name="send_notification_btn">Send Notification</string>
     <string name="insert_script_name">Insert Script Name</string>
     <string name="default_script">hello.sh</string>
+    <string name="notification_enabled">Notification:</string>
 </resources>

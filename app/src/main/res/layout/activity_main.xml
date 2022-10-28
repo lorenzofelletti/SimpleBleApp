@@ -27,7 +27,7 @@
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.642" />
+        app:layout_constraintVertical_bias="0.851" />
 
     <EditText
         android:id="@+id/et_script_name"
@@ -48,7 +48,7 @@
         tools:ignore="LabelFor" />
 
     <TextView
-        android:id="@+id/tw_insert_script"
+        android:id="@+id/tv_insert_script"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/insert_script_name"
@@ -58,4 +58,27 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.952" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_connected_devices"
+        android:layout_width="match_parent"
+        android:layout_height="252dp"
+        android:padding="10dp"
+        app:layout_constraintBottom_toTopOf="@+id/tv_insert_script"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.704" />
+
+    <TextView
+        android:id="@+id/tv_connected_devices"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/tv_connected_devices"
+        app:layout_constraintBottom_toTopOf="@+id/rv_connected_devices"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.69" />
 </androidx.constraintlayout.widget.ConstraintLayout>

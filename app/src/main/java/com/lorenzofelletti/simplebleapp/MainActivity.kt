@@ -10,6 +10,8 @@ import android.widget.Button
 import android.util.Log
 import android.widget.EditText
 import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.lorenzofelletti.simplebleapp.ble.gattserver.GattServerManager
 import com.lorenzofelletti.simplebleapp.ble.gattserver.PeripheralAdvertiseService
 import com.lorenzofelletti.simplebleapp.ble.gattserver.model.BleServiceConnection
@@ -21,6 +23,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnStartServer: Button
     private lateinit var btnSendNotification: Button
     private lateinit var etScriptName: EditText
+    private lateinit var rvConnectedDevices: RecyclerView
 
     private lateinit var gattServerManager: GattServerManager
 
@@ -38,9 +41,12 @@ class MainActivity : AppCompatActivity() {
         btnStartServer = findViewById(R.id.btn_start_server)
         btnSendNotification = findViewById(R.id.btn_send_notification)
         etScriptName = findViewById(R.id.et_script_name)
+        rvConnectedDevices = findViewById(R.id.rv_connected_devices)
 
         val btManager = getSystemService(BluetoothManager::class.java)
         gattServerManager = GattServerManager(this, btManager)
+        rvConnectedDevices.adapter = gattServerManager.connectedDeviceAdapter
+        rvConnectedDevices.layoutManager = LinearLayoutManager(this)
 
         // Adding the onclick listener to the start server button
         btnStartServer.setOnClickListener {
@@ -92,7 +98,6 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Stopping the GATT server", Toast.LENGTH_SHORT).show()
 
             unbindService(connection)
-            //bound = false
         }
     }
 
