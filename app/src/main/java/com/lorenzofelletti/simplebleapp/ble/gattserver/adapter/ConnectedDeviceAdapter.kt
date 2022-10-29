@@ -1,6 +1,7 @@
 package com.lorenzofelletti.simplebleapp.ble.gattserver.adapter
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.bluetooth.BluetoothDevice
 import android.util.Log
 import android.view.LayoutInflater
@@ -13,7 +14,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.lorenzofelletti.simplebleapp.BuildConfig
 import com.lorenzofelletti.simplebleapp.R
 
-class ConnectedDeviceAdapter(private val devices: MutableMap<BluetoothDevice, Boolean>) : RecyclerView.Adapter<ConnectedDeviceAdapter.ViewHolder>() {
+class ConnectedDeviceAdapter(
+    private val devices: MutableMap<BluetoothDevice, Boolean>,
+    private val activity: Activity
+    ) : RecyclerView.Adapter<ConnectedDeviceAdapter.ViewHolder>() {
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val deviceAddressTextView: TextView = itemView.findViewById(R.id.device_address)
         val deviceNameTextView: TextView = itemView.findViewById(R.id.device_name)
@@ -54,7 +58,7 @@ class ConnectedDeviceAdapter(private val devices: MutableMap<BluetoothDevice, Bo
 
         val size = devices.size
         devices.clear()
-        notifyItemRangeRemoved(0, size)
+        activity.runOnUiThread { notifyItemRangeRemoved(0, size) }
     }
 
     fun addDevice(device: BluetoothDevice) {
@@ -62,7 +66,7 @@ class ConnectedDeviceAdapter(private val devices: MutableMap<BluetoothDevice, Bo
             Log.d(TAG, "${::addDevice.name} - Adding device: ${device.address}")
 
         devices[device] = false
-        notifyItemInserted(devices.size - 1)
+        activity.runOnUiThread { notifyItemInserted(devices.size - 1) }
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -71,7 +75,7 @@ class ConnectedDeviceAdapter(private val devices: MutableMap<BluetoothDevice, Bo
             Log.d(TAG, "${::removeDevice.name} - Removing device: ${device.address}")
 
         devices.remove(device)
-        notifyDataSetChanged()
+        activity.runOnUiThread { notifyDataSetChanged() }
     }
 
     fun toggleDeviceNotification(device: BluetoothDevice) {
@@ -87,7 +91,7 @@ class ConnectedDeviceAdapter(private val devices: MutableMap<BluetoothDevice, Bo
         )
 
         devices[device] = !devices[device]!!
-        notifyItemChanged(index)
+        activity.runOnUiThread { notifyItemChanged(index) }
     }
 
     companion object {

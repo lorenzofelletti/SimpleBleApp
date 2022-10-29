@@ -15,7 +15,7 @@ class GattServerManager(
     private val bluetoothManager: BluetoothManager,
 ) {
     private val bluetoothConnectedDevices: MutableMap<BluetoothDevice, Boolean> = mutableMapOf()
-    val connectedDeviceAdapter = ConnectedDeviceAdapter(bluetoothConnectedDevices)
+    val connectedDeviceAdapter = ConnectedDeviceAdapter(bluetoothConnectedDevices, activity)
 
     private val gattServerCallback = BleGattServerCallback(bluetoothConnectedDevices, connectedDeviceAdapter)
     private var bluetoothGattServer: BluetoothGattServer? = null
