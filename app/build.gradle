@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace 'com.lorenzofelletti.simplebleapp'
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.lorenzofelletti.simplebleapp"
         minSdk 31
-        targetSdk 32
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
