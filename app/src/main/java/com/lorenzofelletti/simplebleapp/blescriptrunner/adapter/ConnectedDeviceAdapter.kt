@@ -1,4 +1,4 @@
-package com.lorenzofelletti.simplebleapp.ble.gattserver.adapter
+package com.lorenzofelletti.simplebleapp.blescriptrunner.adapter
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -11,13 +11,14 @@ import android.widget.TextView
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.RecyclerView
-import com.lorenzofelletti.simplebleapp.BuildConfig
+import com.lorenzofelletti.simplebleapp.BuildConfig.DEBUG
 import com.lorenzofelletti.simplebleapp.R
+import com.lorenzofelletti.simplebleapp.ble.gattserver.adapter.RecyclerViewConnectedDeviceAdapter
 
 class ConnectedDeviceAdapter(
-    private val devices: MutableMap<BluetoothDevice, Boolean>,
-    private val activity: Activity
-    ) : RecyclerView.Adapter<ConnectedDeviceAdapter.ViewHolder>() {
+    private val activity: Activity,
+    override var bluetoothConnectedDevices: MutableMap<BluetoothDevice, Boolean>
+) : RecyclerViewConnectedDeviceAdapter<ConnectedDeviceAdapter.ViewHolder>() {
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val deviceAddressTextView: TextView = itemView.findViewById(R.id.device_address)
         val deviceNameTextView: TextView = itemView.findViewById(R.id.device_name)
@@ -33,7 +34,7 @@ class ConnectedDeviceAdapter(
 
     @RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val device = devices.keys.elementAt(position)
+        val device = bluetoothConnectedDevices.keys.elementAt(position)
 
         val addressTextView = holder.deviceAddressTextView
         addressTextView.text = device.address
@@ -42,60 +43,50 @@ class ConnectedDeviceAdapter(
         nameTextView.text = device.name
 
         val notificationStatusTextView = holder.notificationStatusTextView
-        notificationStatusTextView.background = if (devices[device]!!) {
+        notificationStatusTextView.background = if (bluetoothConnectedDevices[device]!!) {
             AppCompatResources.getDrawable(holder.itemView.context, R.drawable.green_dot)
         } else {
             AppCompatResources.getDrawable(holder.itemView.context, R.drawable.red_dot)
         }
     }
 
-    override fun getItemCount(): Int {
-        return devices.size
-    }
+    override fun clearDevices() {
+        super.clearDevices()
 
-    fun clearDevices() {
-        if (DEBUG) Log.d(TAG, "${::clearDevices.name}()")
-
-        val size = devices.size
-        devices.clear()
+        val size = bluetoothConnectedDevices.size
+        bluetoothConnectedDevices.clear()
         activity.runOnUiThread { notifyItemRangeRemoved(0, size) }
     }
 
-    fun addDevice(device: BluetoothDevice) {
-        if (DEBUG)
-            Log.d(TAG, "${::addDevice.name} - Adding device: ${device.address}")
+    override fun addDevice(device: BluetoothDevice) {
+        super.addDevice(device)
 
-        devices[device] = false
-        activity.runOnUiThread { notifyItemInserted(devices.size - 1) }
+        bluetoothConnectedDevices[device] = false
+        activity.runOnUiThread { notifyItemInserted(bluetoothConnectedDevices.size - 1) }
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    fun removeDevice(device: BluetoothDevice) {
-        if (DEBUG)
-            Log.d(TAG, "${::removeDevice.name} - Removing device: ${device.address}")
+    override fun removeDevice(device: BluetoothDevice) {
+        super.removeDevice(device)
 
-        devices.remove(device)
+        bluetoothConnectedDevices.remove(device)
         activity.runOnUiThread { notifyDataSetChanged() }
     }
 
-    fun toggleDeviceNotification(device: BluetoothDevice) {
-        val index = devices.keys.indexOf(device)
+    override fun toggleDeviceNotification(device: BluetoothDevice) {
+        super.toggleDeviceNotification(device)
+
+        val index = bluetoothConnectedDevices.keys.indexOf(device)
         if (index == -1) {
             if (DEBUG) Log.e(TAG, "${::toggleDeviceNotification.name} - Device not found")
             return
         }
 
-        if (DEBUG) Log.d(
-            TAG,
-            "${::toggleDeviceNotification.name} - Toggling device notification for device: ${device.address}"
-        )
-
-        devices[device] = !devices[device]!!
+        bluetoothConnectedDevices[device] = !bluetoothConnectedDevices[device]!!
         activity.runOnUiThread { notifyItemChanged(index) }
     }
 
     companion object {
         private val TAG = ConnectedDeviceAdapter::class.java.simpleName
-        private val DEBUG = BuildConfig.DEBUG
     }
 }

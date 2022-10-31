@@ -5,7 +5,7 @@ import android.bluetooth.BluetoothManager
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import com.lorenzofelletti.simplebleapp.BuildConfig
+import com.lorenzofelletti.simplebleapp.BuildConfig.DEBUG
 import com.lorenzofelletti.simplebleapp.ble.blescanner.model.BleScanCallback
 
 /**
@@ -73,7 +73,6 @@ class BleScanManager(
          */
         const val DEFAULT_SCAN_PERIOD: Long = 10000
         private var TAG = BleScanManager::class.java.simpleName
-        private val DEBUG: Boolean = BuildConfig.DEBUG
 
         /**
          * Function that executes a list of functions taking no arguments and returning [Unit].

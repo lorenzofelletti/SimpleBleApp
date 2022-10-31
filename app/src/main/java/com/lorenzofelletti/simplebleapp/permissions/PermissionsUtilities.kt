@@ -5,11 +5,10 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
-import com.lorenzofelletti.simplebleapp.BuildConfig
+import com.lorenzofelletti.simplebleapp.BuildConfig.DEBUG
 
 object PermissionsUtilities {
     private var TAG = this::class.java.simpleName
-    private val DEBUG = BuildConfig.DEBUG
 
     /**
      * Checks for a set of permissions. If not granted, the user is asked to grant them.

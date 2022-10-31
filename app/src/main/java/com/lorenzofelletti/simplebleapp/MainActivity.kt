@@ -10,11 +10,15 @@ import android.widget.Button
 import android.util.Log
 import android.widget.EditText
 import android.widget.Toast
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import androidx.activity.viewModels
+import com.lorenzofelletti.simplebleapp.BuildConfig.DEBUG
 import com.lorenzofelletti.simplebleapp.ble.gattserver.GattServerManager
 import com.lorenzofelletti.simplebleapp.ble.gattserver.PeripheralAdvertiseService
 import com.lorenzofelletti.simplebleapp.ble.gattserver.model.BleServiceConnection
+import com.lorenzofelletti.simplebleapp.ble.gattserver.viewmodel.GattServerManagerViewModel
+import com.lorenzofelletti.simplebleapp.blescriptrunner.Constants
+import com.lorenzofelletti.simplebleapp.blescriptrunner.model.BleGattServerCallback
+import com.lorenzofelletti.simplebleapp.fragments.ConnectedDevices
 import com.lorenzofelletti.simplebleapp.permissions.AppRequiredPermissions
 import com.lorenzofelletti.simplebleapp.permissions.PermissionsUtilities
 import com.lorenzofelletti.simplebleapp.permissions.PermissionsUtilities.dispatchOnRequestPermissionsResult
@@ -22,10 +26,9 @@ import com.lorenzofelletti.simplebleapp.permissions.PermissionsUtilities.dispatc
 class MainActivity : AppCompatActivity() {
     private lateinit var btnStartServer: Button
     private lateinit var btnSendNotification: Button
-    private lateinit var etScriptName: EditText
-    private lateinit var rvConnectedDevices: RecyclerView
 
     private lateinit var gattServerManager: GattServerManager
+    private val gattServerManagerViewModel: GattServerManagerViewModel by viewModels()
 
     /** Defines callbacks for service binding, passed to bindService()  */
     private val connection = BleServiceConnection.Builder()
@@ -40,13 +43,12 @@ class MainActivity : AppCompatActivity() {
 
         btnStartServer = findViewById(R.id.btn_start_server)
         btnSendNotification = findViewById(R.id.btn_send_notification)
-        etScriptName = findViewById(R.id.et_script_name)
-        rvConnectedDevices = findViewById(R.id.rv_connected_devices)
+        val etScriptName: EditText = findViewById(R.id.et_script_name)
 
-        val btManager = getSystemService(BluetoothManager::class.java)
-        gattServerManager = GattServerManager(this, btManager)
-        rvConnectedDevices.adapter = gattServerManager.connectedDeviceAdapter
-        rvConnectedDevices.layoutManager = LinearLayoutManager(this)
+        GattServerManager(this, gattServerCallbackClass = BleGattServerCallback::class).also {
+            gattServerManager = it
+            gattServerManagerViewModel.gattServerManager = it
+        }
 
         // Adding the onclick listener to the start server button
         btnStartServer.setOnClickListener {
@@ -69,9 +71,23 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnSendNotification.setOnClickListener {
+            if (DEBUG) Log.i(TAG, "Sending notification")
+
+            Toast.makeText(this, "Sending notification", Toast.LENGTH_SHORT).show()
+
             val scriptName = etScriptName.text.toString()
             gattServerManager.setCharacteristic(Constants.UUID_MY_CHARACTERISTIC, scriptName)
         }
+
+        // setting up the connected devices fragment
+        val connectedDevicesFragment = ConnectedDevices.newInstance()
+        supportFragmentManager.beginTransaction()
+            .add(
+                R.id.frameLayout,
+                connectedDevicesFragment,
+                ConnectedDevices::class.java.simpleName
+            )
+            .commit()
     }
 
     override fun onStop() {
@@ -103,7 +119,6 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("MissingPermission")
     private fun startGattServer() {
-        //setGattServer()
         gattServerManager.startGattServer()
 
         setBluetoothService(gattServerManager)
@@ -153,7 +168,6 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private val TAG = MainActivity::class.java.simpleName
-        private val DEBUG: Boolean = BuildConfig.DEBUG
 
         private const val BLE_SERVER_REQUEST_CODE = 2
     }

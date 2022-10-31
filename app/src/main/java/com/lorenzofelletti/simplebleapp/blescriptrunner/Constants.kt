@@ -1,4 +1,4 @@
-package com.lorenzofelletti.simplebleapp
+package com.lorenzofelletti.simplebleapp.blescriptrunner
 
 import java.util.UUID
 

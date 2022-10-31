@@ -13,9 +13,9 @@ import android.os.ParcelUuid
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.annotation.RestrictTo
-import com.lorenzofelletti.simplebleapp.BuildConfig
+import com.lorenzofelletti.simplebleapp.BuildConfig.DEBUG
 import com.lorenzofelletti.simplebleapp.ble.gattserver.model.BleAdvertiseCallback
-import com.lorenzofelletti.simplebleapp.Constants
+import com.lorenzofelletti.simplebleapp.blescriptrunner.Constants
 
 /**
  * Service that handles the BLE advertising in peripheral mode.
@@ -104,7 +104,6 @@ class PeripheralAdvertiseService(
 
     companion object {
         private val TAG = PeripheralAdvertiseService::class.java.simpleName
-        private val DEBUG = BuildConfig.DEBUG
 
         private fun buildAdvertiseData(): AdvertiseData {
             return AdvertiseData.Builder()

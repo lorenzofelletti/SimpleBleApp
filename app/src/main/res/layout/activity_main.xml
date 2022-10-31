@@ -14,7 +14,9 @@
         android:text="@string/btn_start_server_text"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/frameLayout"
+        app:layout_constraintVertical_bias="1.0" />
 
     <Button
         android:id="@+id/btn_send_notification"
@@ -27,7 +29,7 @@
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.851" />
+        app:layout_constraintVertical_bias="0.919" />
 
     <EditText
         android:id="@+id/et_script_name"
@@ -59,26 +61,16 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.952" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_connected_devices"
-        android:layout_width="match_parent"
-        android:layout_height="252dp"
-        android:padding="10dp"
-        app:layout_constraintBottom_toTopOf="@+id/tv_insert_script"
+    <FrameLayout
+        android:id="@+id/frameLayout"
+        android:layout_width="409dp"
+        android:layout_height="355dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.704" />
+        app:layout_constraintBottom_toTopOf="@+id/tv_insert_script">
 
-    <TextView
-        android:id="@+id/tv_connected_devices"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/tv_connected_devices"
-        app:layout_constraintBottom_toTopOf="@+id/rv_connected_devices"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.69" />
+    </FrameLayout>
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

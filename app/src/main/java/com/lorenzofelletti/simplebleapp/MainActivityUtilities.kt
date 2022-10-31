@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattService
 import com.lorenzofelletti.simplebleapp.ble.gattserver.GattServerManager
+import com.lorenzofelletti.simplebleapp.blescriptrunner.Constants
 
 /**
  * Creates the service and the characteristic to be added to the GATT server and
