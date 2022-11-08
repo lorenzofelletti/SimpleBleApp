@@ -1,10 +1,17 @@
 package com.lorenzofelletti.simplebleapp.ble.gattserver.model
 
-import com.lorenzofelletti.simplebleapp.BuildConfig
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseSettings
+import com.lorenzofelletti.simplebleapp.BuildConfig.DEBUG
 
-
+/**
+ * Callback for the BLE advertising.
+ *
+ * @param doOnStartSuccess Callback to be called when the advertising starts successfully.
+ * @param doOnStartFailure Callback to be called when the advertising fails to start.
+ *
+ * @see [AdvertiseCallback](https://developer.android.com/reference/android/bluetooth/le/AdvertiseCallback)
+ */
 class BleAdvertiseCallback(
     private val doOnStartSuccess: () -> Unit = {},
     private val doOnStartFailure: () -> Unit = {},
@@ -27,6 +34,5 @@ class BleAdvertiseCallback(
 
     companion object {
         private val TAG = BleAdvertiseCallback::class.java.simpleName
-        private val DEBUG = BuildConfig.DEBUG
     }
 }

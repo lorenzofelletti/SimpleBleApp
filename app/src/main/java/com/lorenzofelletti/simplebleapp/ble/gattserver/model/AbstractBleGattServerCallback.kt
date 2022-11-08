@@ -4,6 +4,8 @@ import android.bluetooth.*
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.lorenzofelletti.simplebleapp.BuildConfig.DEBUG
+import com.lorenzofelletti.simplebleapp.ble.gattserver.model.interfaces.HasConnectedDevicesAdapter
+import com.lorenzofelletti.simplebleapp.ble.gattserver.model.interfaces.HasConnectedDevicesMap
 
 
 abstract class AbstractBleGattServerCallback(override var bluetoothConnectedDevices: MutableMap<BluetoothDevice, Boolean>) :

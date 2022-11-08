@@ -1,4 +1,4 @@
-package com.lorenzofelletti.simplebleapp.ble.gattserver.adapter
+package com.lorenzofelletti.simplebleapp.ble.gattserver.adapter.interfaces
 
 import android.bluetooth.BluetoothDevice
 

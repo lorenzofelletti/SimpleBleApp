@@ -6,10 +6,10 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.lorenzofelletti.simplebleapp.BuildConfig.DEBUG
-import com.lorenzofelletti.simplebleapp.ble.gattserver.adapter.ConnectedDeviceAdapterInterface
+import com.lorenzofelletti.simplebleapp.ble.gattserver.adapter.interfaces.ConnectedDeviceAdapterInterface
 import com.lorenzofelletti.simplebleapp.ble.gattserver.model.AbstractBleGattServerCallback
-import com.lorenzofelletti.simplebleapp.ble.gattserver.model.HasConnectedDevicesAdapter
-import com.lorenzofelletti.simplebleapp.ble.gattserver.model.HasConnectedDevicesMap
+import com.lorenzofelletti.simplebleapp.ble.gattserver.model.interfaces.HasConnectedDevicesAdapter
+import com.lorenzofelletti.simplebleapp.ble.gattserver.model.interfaces.HasConnectedDevicesMap
 import java.util.UUID
 import kotlin.reflect.KClass
 

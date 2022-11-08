@@ -143,7 +143,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Function that checks whether the permission was granted or not
+     * Function that checks whether the permission was granted or not.
      */
     override fun onRequestPermissionsResult(
         requestCode: Int, permissions: Array<out String>, grantResults: IntArray

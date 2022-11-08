@@ -4,10 +4,17 @@ import android.content.ComponentName
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
-import com.lorenzofelletti.simplebleapp.BuildConfig
+import com.lorenzofelletti.simplebleapp.BuildConfig.DEBUG
 import com.lorenzofelletti.simplebleapp.ble.gattserver.PeripheralAdvertiseService
 
+/**
+ * Service connection for the BLE advertising.
+ * To create an instance of this class, use the [BleServiceConnection.Builder] class.
+ */
 class BleServiceConnection private constructor(builder: Builder) : ServiceConnection {
+    /**
+     * True if the service is bound, false otherwise.
+     */
     var bound = false
         private set
     private lateinit var advertisingService: PeripheralAdvertiseService
@@ -42,10 +49,16 @@ class BleServiceConnection private constructor(builder: Builder) : ServiceConnec
         onServiceDisconnectedActions.forEach { it() }
     }
 
+    /**
+     * Builder class for the [BleServiceConnection] class.
+     */
     class Builder {
         val onServiceConnectedActions = mutableListOf<() -> Unit>()
         val onServiceDisconnectedActions = mutableListOf<() -> Unit>()
 
+        /**
+         * Adds an action to be executed both when the service is connected and when it is disconnected.
+         */
         fun addCommonActions(vararg actions: () -> Unit) = apply {
             onServiceConnectedActions.addAll(actions.toList())
             onServiceDisconnectedActions.addAll(actions.toList())
@@ -59,11 +72,13 @@ class BleServiceConnection private constructor(builder: Builder) : ServiceConnec
             onServiceDisconnectedActions.addAll(actions.toList())
         }
 
+        /**
+         * Builds the [BleServiceConnection] instance.
+         */
         fun build() = BleServiceConnection(this)
     }
 
     companion object {
         private val TAG = BleServiceConnection::class.java.simpleName
-        private val DEBUG = BuildConfig.DEBUG
     }
 }

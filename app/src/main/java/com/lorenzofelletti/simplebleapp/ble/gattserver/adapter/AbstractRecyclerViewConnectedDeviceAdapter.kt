@@ -4,10 +4,15 @@ import android.bluetooth.BluetoothDevice
 import android.util.Log
 import androidx.recyclerview.widget.RecyclerView
 import com.lorenzofelletti.simplebleapp.BuildConfig.DEBUG
-import com.lorenzofelletti.simplebleapp.ble.gattserver.model.HasConnectedDevicesMap
+import com.lorenzofelletti.simplebleapp.ble.gattserver.adapter.interfaces.ConnectedDeviceAdapterInterface
+import com.lorenzofelletti.simplebleapp.ble.gattserver.model.interfaces.HasConnectedDevicesMap
 import com.lorenzofelletti.simplebleapp.blescriptrunner.adapter.ConnectedDeviceAdapter
 
-abstract class RecyclerViewConnectedDeviceAdapter<T : RecyclerView.ViewHolder?> :
+/**
+ * Base class for the adapters that handle the connected devices in a [RecyclerView].
+ * Implements the [ConnectedDeviceAdapterInterface] interface and the [HasConnectedDevicesMap] interface.
+ */
+abstract class AbstractRecyclerViewConnectedDeviceAdapter<T : RecyclerView.ViewHolder?> :
     RecyclerView.Adapter<T>(), ConnectedDeviceAdapterInterface,
     HasConnectedDevicesMap {
 

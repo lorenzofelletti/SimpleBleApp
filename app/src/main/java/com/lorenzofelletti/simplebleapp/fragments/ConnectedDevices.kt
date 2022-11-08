@@ -14,7 +14,8 @@ import com.lorenzofelletti.simplebleapp.ble.gattserver.viewmodel.GattServerManag
 import com.lorenzofelletti.simplebleapp.blescriptrunner.adapter.ConnectedDeviceAdapter
 
 /**
- * A simple [Fragment] subclass.
+ * A simple [Fragment] to manage the connected devices UI.
+ *
  * Use the [ConnectedDevices.newInstance] factory method to
  * create an instance of this fragment.
  */

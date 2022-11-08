@@ -13,12 +13,18 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.RecyclerView
 import com.lorenzofelletti.simplebleapp.BuildConfig.DEBUG
 import com.lorenzofelletti.simplebleapp.R
-import com.lorenzofelletti.simplebleapp.ble.gattserver.adapter.RecyclerViewConnectedDeviceAdapter
+import com.lorenzofelletti.simplebleapp.ble.gattserver.adapter.AbstractRecyclerViewConnectedDeviceAdapter
 
+/**
+ * Adapter for the connected devices list's [RecyclerView].
+ *
+ * @param activity The activity that contains the [RecyclerView].
+ * @param bluetoothConnectedDevices The map of connected devices.
+ */
 class ConnectedDeviceAdapter(
     private val activity: Activity,
     override var bluetoothConnectedDevices: MutableMap<BluetoothDevice, Boolean>
-) : RecyclerViewConnectedDeviceAdapter<ConnectedDeviceAdapter.ViewHolder>() {
+) : AbstractRecyclerViewConnectedDeviceAdapter<ConnectedDeviceAdapter.ViewHolder>() {
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val deviceAddressTextView: TextView = itemView.findViewById(R.id.device_address)
         val deviceNameTextView: TextView = itemView.findViewById(R.id.device_name)
@@ -73,6 +79,12 @@ class ConnectedDeviceAdapter(
         activity.runOnUiThread { notifyDataSetChanged() }
     }
 
+    /**
+     * Toggles the notification for a device, i.e. if the notification subscription is active (true) it
+     * will be deactivated (false) and vice versa.
+     *
+     * @param device The device to toggle the notification.
+     */
     override fun toggleDeviceNotification(device: BluetoothDevice) {
         super.toggleDeviceNotification(device)
 
@@ -82,8 +94,10 @@ class ConnectedDeviceAdapter(
             return
         }
 
-        bluetoothConnectedDevices[device] = !bluetoothConnectedDevices[device]!!
-        activity.runOnUiThread { notifyItemChanged(index) }
+        bluetoothConnectedDevices[device]?.let { notificationState ->
+            bluetoothConnectedDevices[device] = !notificationState
+            activity.runOnUiThread { notifyItemChanged(index) }
+        }
     }
 
     companion object {
