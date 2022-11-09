@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.lorenzofelletti.simplebleapp.R
 import com.lorenzofelletti.simplebleapp.ble.gattserver.GattServerManager
-import com.lorenzofelletti.simplebleapp.ble.gattserver.viewmodel.GattServerManagerViewModel
+import com.lorenzofelletti.simplebleapp.blescriptrunner.viewmodel.GattServerManagerViewModel
 import com.lorenzofelletti.simplebleapp.blescriptrunner.adapter.ConnectedDeviceAdapter
 
 /**

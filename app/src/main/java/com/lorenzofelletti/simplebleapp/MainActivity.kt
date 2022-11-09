@@ -15,7 +15,7 @@ import com.lorenzofelletti.simplebleapp.BuildConfig.DEBUG
 import com.lorenzofelletti.simplebleapp.ble.gattserver.GattServerManager
 import com.lorenzofelletti.simplebleapp.ble.gattserver.PeripheralAdvertiseService
 import com.lorenzofelletti.simplebleapp.ble.gattserver.model.BleServiceConnection
-import com.lorenzofelletti.simplebleapp.ble.gattserver.viewmodel.GattServerManagerViewModel
+import com.lorenzofelletti.simplebleapp.blescriptrunner.viewmodel.GattServerManagerViewModel
 import com.lorenzofelletti.simplebleapp.blescriptrunner.Constants
 import com.lorenzofelletti.simplebleapp.blescriptrunner.model.BleGattServerCallback
 import com.lorenzofelletti.simplebleapp.fragments.ConnectedDevices
