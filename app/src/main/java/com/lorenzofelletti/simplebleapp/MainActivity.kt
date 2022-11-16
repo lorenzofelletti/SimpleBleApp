@@ -76,7 +76,7 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Sending notification", Toast.LENGTH_SHORT).show()
 
             val scriptName = etScriptName.text.toString()
-            gattServerManager.setCharacteristic(Constants.UUID_MY_CHARACTERISTIC, scriptName)
+            gattServerManager.setCharacteristic(Constants.UUID_SCRIPT_RUNNER_CHARACTERISTIC, scriptName)
         }
 
         // setting up the connected devices fragment

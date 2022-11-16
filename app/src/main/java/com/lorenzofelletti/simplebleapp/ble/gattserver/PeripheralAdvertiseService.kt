@@ -107,7 +107,7 @@ class PeripheralAdvertiseService(
 
         private fun buildAdvertiseData(): AdvertiseData {
             return AdvertiseData.Builder()
-                .addServiceUuid(ParcelUuid(Constants.UUID_MY_SERVICE))
+                .addServiceUuid(ParcelUuid(Constants.UUID_SCRIPT_RUNNER_SERVICE))
                 .setIncludeDeviceName(true)
                 .build()
         }
