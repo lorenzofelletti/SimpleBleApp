@@ -13,23 +13,39 @@ import com.lorenzofelletti.simplebleapp.blescriptrunner.Constants
  */
 @SuppressLint("MissingPermission")
 fun setBluetoothService(gattServerManager: GattServerManager) {
-    val myService = BluetoothGattService(
-        Constants.UUID_MY_SERVICE, BluetoothGattService.SERVICE_TYPE_PRIMARY
+    val scriptRunnerService = BluetoothGattService(
+        Constants.UUID_SCRIPT_RUNNER_SERVICE, BluetoothGattService.SERVICE_TYPE_PRIMARY
     )
-    val myCharacteristic = BluetoothGattCharacteristic(
-        Constants.UUID_MY_CHARACTERISTIC,
+    val scriptRunnerCharacteristic = BluetoothGattCharacteristic(
+        Constants.UUID_SCRIPT_RUNNER_CHARACTERISTIC,
         BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
         BluetoothGattCharacteristic.PERMISSION_READ
     )
 
-    val myDescriptor = BluetoothGattDescriptor(
-        Constants.UUID_MY_DESCRIPTOR, BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_WRITE
+    val scriptRunnerCharDescriptor = BluetoothGattDescriptor(
+        Constants.UUID_SCRIPT_RUNNER_DESCRIPTOR, BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_WRITE
     )
-    myCharacteristic.descriptors?.add(myDescriptor)
+    scriptRunnerCharacteristic.descriptors?.add(scriptRunnerCharDescriptor)
 
 
-    myService.addCharacteristic(myCharacteristic)
+    scriptRunnerService.addCharacteristic(scriptRunnerCharacteristic)
 
-    gattServerManager.addService(myService)
-    gattServerManager.addCharacteristicToService(myService.uuid, myCharacteristic)
+    // Add script result characteristic
+    val scriptResultsCharacteristic = BluetoothGattCharacteristic(
+        Constants.UUID_SCRIPT_RESULTS_CHARACTERISTIC,
+        BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_WRITE,
+        BluetoothGattCharacteristic.PERMISSION_READ or BluetoothGattCharacteristic.PERMISSION_WRITE
+    )
+
+    val scriptResultsCharDescriptor = BluetoothGattDescriptor(
+        Constants.UUID_SCRIPT_RESULTS_DESCRIPTOR, BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_WRITE
+    )
+    scriptResultsCharacteristic.descriptors?.add(scriptResultsCharDescriptor)
+
+    scriptRunnerService.addCharacteristic(scriptResultsCharacteristic)
+
+    gattServerManager.addService(scriptRunnerService)
+
+    gattServerManager.addCharacteristicToService(scriptRunnerService.uuid, scriptResultsCharacteristic)
+    gattServerManager.addCharacteristicToService(scriptRunnerService.uuid, scriptRunnerCharacteristic)
 }

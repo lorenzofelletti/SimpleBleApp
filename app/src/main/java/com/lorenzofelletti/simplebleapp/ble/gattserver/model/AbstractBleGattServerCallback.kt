@@ -76,12 +76,16 @@ abstract class AbstractBleGattServerCallback(override var bluetoothConnectedDevi
         }
 
         if (responseNeeded) {
-            bluetoothGattServer?.sendResponse(
+            val res = bluetoothGattServer?.sendResponse(
                 device,
                 requestId,
                 if (success) BluetoothGatt.GATT_SUCCESS else BluetoothGatt.GATT_FAILURE,
                 0,
                 value
+            )
+            if (DEBUG) Log.i(
+                TAG,
+                "${::onCharacteristicWriteRequest.name} - Response sent: $res"
             )
         }
     }

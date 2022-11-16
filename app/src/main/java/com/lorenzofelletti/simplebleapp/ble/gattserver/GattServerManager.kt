@@ -73,7 +73,11 @@ class GattServerManager(
             "${::addCharacteristicToService.name} - Adding characteristic to service: $serviceUUID"
         )
 
-        servicesMap[serviceUUID]?.addCharacteristic(characteristic)
+        val res = servicesMap[serviceUUID]?.addCharacteristic(characteristic)
+        if (DEBUG) Log.i(
+            TAG,
+            "${::addCharacteristicToService.name} - BluetoothGattCharacteristic ADDED: $res"
+        )
         characteristicsMap[characteristic.uuid] = characteristic
     }
 

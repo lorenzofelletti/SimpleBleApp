@@ -6,6 +6,9 @@ import androidx.annotation.RequiresPermission
 import com.lorenzofelletti.simplebleapp.BuildConfig.DEBUG
 import com.lorenzofelletti.simplebleapp.ble.gattserver.adapter.interfaces.ConnectedDeviceAdapterInterface
 import com.lorenzofelletti.simplebleapp.ble.gattserver.model.AbstractBleGattServerCallback
+import com.lorenzofelletti.simplebleapp.blescriptrunner.Constants
+import com.lorenzofelletti.simplebleapp.blescriptrunner.Constants.UUID_SCRIPT_RESULTS_CHARACTERISTIC
+import com.lorenzofelletti.simplebleapp.blescriptrunner.ExecutionStatus
 
 class BleGattServerCallback(
     override var adapter: ConnectedDeviceAdapterInterface?,
@@ -80,6 +83,49 @@ class BleGattServerCallback(
             bluetoothGattServer?.sendResponse(
                 device, requestId, BluetoothGatt.GATT_SUCCESS, 0, value
             )
+        }
+    }
+
+    @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
+    override fun onCharacteristicReadRequest(
+        device: BluetoothDevice?,
+        requestId: Int,
+        offset: Int,
+        characteristic: BluetoothGattCharacteristic?
+    ) {
+        super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
+
+        if (device != null && characteristic?.uuid == UUID_SCRIPT_RESULTS_CHARACTERISTIC) {
+            if (DEBUG) Log.i(TAG, "${::onCharacteristicReadRequest.name} - calling blinkDevice")
+            adapter?.blinkDevice(device, ExecutionStatus.RUNNING.value, -1)
+        }
+    }
+
+    @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
+    override fun onCharacteristicWriteRequest(
+        device: BluetoothDevice?,
+        requestId: Int,
+        characteristic: BluetoothGattCharacteristic?,
+        preparedWrite: Boolean,
+        responseNeeded: Boolean,
+        offset: Int,
+        value: ByteArray?
+    ) {
+        super.onCharacteristicWriteRequest(
+            device,
+            requestId,
+            characteristic,
+            preparedWrite,
+            responseNeeded,
+            offset,
+            value
+        )
+
+        if (device != null && characteristic?.uuid == UUID_SCRIPT_RESULTS_CHARACTERISTIC) {
+            val executionResult = String(value ?: byteArrayOf(Constants.EXIT_CODE_FAILURE.toByte()))
+            val blinkStatus =
+                if (executionResult == Constants.EXIT_CODE_SUCCESS) ExecutionStatus.FINISHED_SUCCESS.value else ExecutionStatus.FINISHED_ERROR.value
+            adapter?.blinkDevice(device, blinkStatus, Constants.BLINKING_DURATION)
         }
     }
 

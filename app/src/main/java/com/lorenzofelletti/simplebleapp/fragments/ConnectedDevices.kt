@@ -1,6 +1,7 @@
 package com.lorenzofelletti.simplebleapp.fragments
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -8,8 +9,8 @@ import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.lorenzofelletti.simplebleapp.BuildConfig.DEBUG
 import com.lorenzofelletti.simplebleapp.R
-import com.lorenzofelletti.simplebleapp.ble.gattserver.GattServerManager
 import com.lorenzofelletti.simplebleapp.blescriptrunner.viewmodel.GattServerManagerViewModel
 import com.lorenzofelletti.simplebleapp.blescriptrunner.adapter.ConnectedDeviceAdapter
 
@@ -21,7 +22,6 @@ import com.lorenzofelletti.simplebleapp.blescriptrunner.adapter.ConnectedDeviceA
  */
 class ConnectedDevices : Fragment() {
     private val gattServerManagerViewModel: GattServerManagerViewModel by activityViewModels()
-    private lateinit var gattServerManager: GattServerManager
     private lateinit var rvConnectedDevices: RecyclerView
 
     override fun onCreateView(
@@ -34,22 +34,31 @@ class ConnectedDevices : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        try {
-            gattServerManager = gattServerManagerViewModel.gattServerManager!!
-
-            val devices = gattServerManager.bluetoothConnectedDevices
-            gattServerManager.adapter = this.activity?.let { ConnectedDeviceAdapter(it, devices) }
-
-        } catch (e: UninitializedPropertyAccessException) {
-            throw UninitializedPropertyAccessException("GattServerManager not initialized")
-        }
 
         rvConnectedDevices = view.findViewById(R.id.rv_connected_devices)
-        rvConnectedDevices.adapter = gattServerManager.adapter as RecyclerView.Adapter<*>?
         rvConnectedDevices.layoutManager = LinearLayoutManager(activity)
+
+        try {
+            val gattServerManager = gattServerManagerViewModel.gattServerManager
+
+            val devices = gattServerManager?.bluetoothConnectedDevices
+            if (devices != null) {
+                gattServerManager.adapter =
+                    this.activity?.let { fragment ->
+                        ConnectedDeviceAdapter(fragment, devices)
+                    }
+                rvConnectedDevices.adapter = gattServerManager.adapter as RecyclerView.Adapter<*>?
+            }
+        } catch (e: UninitializedPropertyAccessException) {
+            if (DEBUG) {
+                Log.e(TAG, "GattServerManager not initialized")
+            }
+            throw UninitializedPropertyAccessException("GattServerManager not initialized")
+        }
     }
 
     companion object {
+        private val TAG = ConnectedDevices::class.java.simpleName
         /**
          * Use this factory method to create a new instance of
          * this fragment using the provided parameters.

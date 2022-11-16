@@ -7,6 +7,8 @@ import android.bluetooth.BluetoothDevice
  * subscribes/unsubscribes to a characteristic notification.
  */
 interface ConnectedDeviceAdapterInterface {
+    val blinkingMap: MutableMap<BluetoothDevice, Int>
+
     /**
      * Clears the list of connected devices and notifies the adapter.
      */
@@ -32,4 +34,15 @@ interface ConnectedDeviceAdapterInterface {
      * @param device The device to toggle the notification.
      */
     fun toggleDeviceNotification(device: BluetoothDevice)
+
+    /**
+     * Makes the device blink in the list of connected devices for some time.
+     *
+     * @param device The device to blink
+     * @param color The color to use for the blink
+     * @param duration The duration of the blink in milliseconds, negative to blink indefinitely
+     */
+    fun blinkDevice(device: BluetoothDevice, blinkStatus: Int, duration: Long = 1000) {
+        // empty to avoid forcing the implementation of this method
+    }
 }
