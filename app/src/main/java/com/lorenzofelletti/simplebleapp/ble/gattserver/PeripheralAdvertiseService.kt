@@ -67,7 +67,7 @@ class PeripheralAdvertiseService(
      * A [Binder] for this service.
      */
     inner class PeripheralAdvertiseBinder : Binder() {
-        fun getService(): PeripheralAdvertiseService = this@PeripheralAdvertiseService
+        fun getService() = this@PeripheralAdvertiseService
     }
 
     @RequiresPermission("android.permission.BLUETOOTH_ADVERTISE")
@@ -114,7 +114,8 @@ class PeripheralAdvertiseService(
 
         private fun buildAdvertiseSettings(): AdvertiseSettings {
             return AdvertiseSettings.Builder()
-                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER)
+                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
                 .setConnectable(true)
                 .setTimeout(0)
                 .build()
