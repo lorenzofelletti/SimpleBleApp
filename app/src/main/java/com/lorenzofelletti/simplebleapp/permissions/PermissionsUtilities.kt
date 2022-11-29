@@ -10,6 +10,70 @@ import com.lorenzofelletti.simplebleapp.BuildConfig.DEBUG
 object PermissionsUtilities {
     private var TAG = this::class.java.simpleName
 
+    private lateinit var requestResultsDispatcher: RequestResultsDispatcher
+
+    /**
+     * Class used to dispatch the results of the permission requests.
+     * @param onGrantedMap A map of the permissions to be granted and the callback to be called when
+     * the permission is granted.
+     * @param onDeniedMap A map of the permissions to be denied and the callback to be called when
+     * the permission is denied.
+     */
+    data class RequestResultsDispatcher(
+        val onGrantedMap: Map<Int, () -> Unit>, val onDeniedMap: Map<Int, () -> Unit>
+    ) {
+        /**
+         * Adds a callback to a permission request code to be called when the permission is granted.
+         * It can be used inside [buildRequestResultsDispatcher] to add a callback to a permission
+         * request code.
+         */
+        val onGranted = fun RequestResultsDispatcher.(requestCode: Int, onGranted: () -> Unit) {
+            onGrantedMap + (requestCode to onGranted)
+        }
+
+        /**
+         * Adds a callback to a permission request code to be called when the permission is denied.
+         * It can be used inside [buildRequestResultsDispatcher] to add a callback to a permission
+         * request code.
+         */
+        val onDenied = fun RequestResultsDispatcher.(requestCode: Int, onDenied: () -> Unit) {
+            onDeniedMap + (requestCode to onDenied)
+        }
+
+        /**
+         * Returns the callback to be called based on the permission request code and the result of
+         * the permission request. It can be null if the permission request code is not in the maps.
+         *
+         * @param requestCode The permission request code.
+         * @param grantResults The result of the permission request.
+         * @return The callback to be called
+         */
+        fun dispatchedAction(requestCode: Int, grantResults: IntArray): (() -> Unit)? =
+            when (checkGrantResults(grantResults)) {
+                true -> onGrantedMap[requestCode]
+                false -> onDeniedMap[requestCode]
+            }
+    }
+
+    /**
+     * Builds a [RequestResultsDispatcher] object that can be used to dispatch the results of the
+     * permission requests.
+     *
+     * @param init A lambda that initializes the [RequestResultsDispatcher] object.
+     */
+    fun buildRequestResultsDispatcher(init: RequestResultsDispatcher.() -> Unit) {
+        requestResultsDispatcher = RequestResultsDispatcher(
+            onGrantedMap = mapOf(), onDeniedMap = mapOf()
+        ).apply { init() }
+    }
+
+    init {
+        buildRequestResultsDispatcher {
+            onGranted(0) { Log.d(TAG, "Permission granted") }
+            onDenied(0) { Log.d(TAG, "Permission denied") }
+        }
+    }
+
     /**
      * Checks for a set of permissions. If not granted, the user is asked to grant them.
      *
@@ -53,41 +117,17 @@ object PermissionsUtilities {
     }
 
     /**
-     * Checks the result of a permission request, and dispatches the appropriate action
+     * Checks the result of a permission request, and dispatches the appropriate action.
+     * The actions can be defined by the user by using the [buildRequestResultsDispatcher] function
      *
      * @param requestCode The request code of the permission request
      * @param grantResults The results of the permission request
-     * @param onGrantedMap maps the request code to the action to be performed if the permissions are granted
-     * @param onDeniedMap maps the request code to the action to be performed if the permissions are not granted
      */
     fun dispatchOnRequestPermissionsResult(
-        requestCode: Int, grantResults: IntArray,
-        onGrantedMap: Map<Int, () -> Unit>, onDeniedMap: Map<Int, () -> Unit>
+        requestCode: Int,
+        grantResults: IntArray,
     ) {
-        when (checkGrantResults(grantResults)) {
-            true -> {
-                if (DEBUG) {
-                    Log.d(
-                        TAG,
-                        "${::dispatchOnRequestPermissionsResult.name} - permissions for request code $requestCode granted!"
-                    )
-                }
-
-                // Dispatches what to do after the permissions are granted
-                onGrantedMap[requestCode]?.invoke()
-            }
-            false -> {
-                if (DEBUG) {
-                    Log.d(
-                        TAG,
-                        "${::dispatchOnRequestPermissionsResult.name} - some permissions for request code $requestCode were not granted"
-                    )
-                }
-
-                // Dispatches what to do after the permissions are denied
-                onDeniedMap[requestCode]?.invoke()
-            }
-        }
+        requestResultsDispatcher.dispatchedAction(requestCode, grantResults)?.invoke()
     }
 
     /**

@@ -41,6 +41,19 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        PermissionsUtilities.buildRequestResultsDispatcher {
+            onGranted(BLE_SERVER_REQUEST_CODE) {
+                bindToAdvertiseService()
+            }
+            onDenied(BLE_SERVER_REQUEST_CODE) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Some permissions were not granted, please grant them and try again",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+
         btnStartServer = findViewById(R.id.btn_start_server)
         btnSendNotification = findViewById(R.id.btn_send_notification)
         val etScriptName: EditText = findViewById(R.id.et_script_name)
@@ -76,18 +89,16 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Sending notification", Toast.LENGTH_SHORT).show()
 
             val scriptName = etScriptName.text.toString()
-            gattServerManager.setCharacteristic(Constants.UUID_SCRIPT_RUNNER_CHARACTERISTIC, scriptName)
+            gattServerManager.setCharacteristic(
+                Constants.UUID_SCRIPT_RUNNER_CHARACTERISTIC, scriptName
+            )
         }
 
         // setting up the connected devices fragment
         val connectedDevicesFragment = ConnectedDevices.newInstance()
-        supportFragmentManager.beginTransaction()
-            .add(
-                R.id.frameLayout,
-                connectedDevicesFragment,
-                ConnectedDevices::class.java.simpleName
-            )
-            .commit()
+        supportFragmentManager.beginTransaction().add(
+                R.id.frameLayout, connectedDevicesFragment, ConnectedDevices::class.java.simpleName
+            ).commit()
     }
 
     override fun onDestroy() {
@@ -154,16 +165,6 @@ class MainActivity : AppCompatActivity() {
         dispatchOnRequestPermissionsResult(
             requestCode,
             grantResults,
-            onGrantedMap = mapOf(BLE_SERVER_REQUEST_CODE to {
-                bindToAdvertiseService()
-            }),
-            onDeniedMap = mapOf(BLE_SERVER_REQUEST_CODE to {
-                Toast.makeText(
-                    this,
-                    "Some permissions were not granted, please grant them and try again",
-                    Toast.LENGTH_LONG
-                ).show()
-            })
         )
     }
 
