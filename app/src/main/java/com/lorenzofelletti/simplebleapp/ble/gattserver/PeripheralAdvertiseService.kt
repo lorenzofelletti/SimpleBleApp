@@ -49,13 +49,12 @@ class PeripheralAdvertiseService(
 
     @SuppressLint("MissingPermission")
     override fun onDestroy() {
-        super.onDestroy()
-
         @RestrictTo(RestrictTo.Scope.TESTS)
         isRunning = false
 
+        onServiceStopActions.clear()
         stopAdvertising()
-        stopForeground(true)
+
         super.onDestroy()
     }
 

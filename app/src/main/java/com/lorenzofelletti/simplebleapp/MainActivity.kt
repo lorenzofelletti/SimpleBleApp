@@ -90,9 +90,10 @@ class MainActivity : AppCompatActivity() {
             .commit()
     }
 
-    override fun onStop() {
-        super.onStop()
+    override fun onDestroy() {
         unbindFromAdvertiseService()
+
+        super.onDestroy()
     }
 
     private fun bindToAdvertiseService() {
