@@ -8,6 +8,7 @@ import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Context
+import android.content.Intent
 import android.os.Binder
 import android.os.ParcelUuid
 import android.util.Log
@@ -31,11 +32,6 @@ class PeripheralAdvertiseService(
 
     private lateinit var bluetoothLeAdvertiser: BluetoothLeAdvertiser
 
-    /**
-     * Actions to be performed when the service is stopped.
-     */
-    val onServiceStopActions: MutableList<() -> Unit> = mutableListOf()
-
     @RequiresPermission("android.permission.BLUETOOTH_ADVERTISE")
     override fun onCreate() {
         super.onCreate()
@@ -52,13 +48,12 @@ class PeripheralAdvertiseService(
         @RestrictTo(RestrictTo.Scope.TESTS)
         isRunning = false
 
-        onServiceStopActions.clear()
         stopAdvertising()
 
         super.onDestroy()
     }
 
-    override fun onBind(intent: android.content.Intent?): android.os.IBinder {
+    override fun onBind(intent: Intent?): android.os.IBinder {
         return binder
     }
 
@@ -74,9 +69,6 @@ class PeripheralAdvertiseService(
         if (DEBUG) Log.d(TAG, "${::stopAdvertising.name} - Stopping advertising")
 
         bluetoothLeAdvertiser.stopAdvertising(advertiseCallback)
-
-        onServiceStopActions.forEach { it() }
-        onServiceStopActions.clear()
 
         advertiseCallback = null
     }

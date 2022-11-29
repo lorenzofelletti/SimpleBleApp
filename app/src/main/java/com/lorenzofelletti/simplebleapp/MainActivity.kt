@@ -2,8 +2,6 @@ package com.lorenzofelletti.simplebleapp
 
 import android.annotation.SuppressLint
 import android.bluetooth.*
-import android.content.Context
-import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
@@ -13,8 +11,6 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import com.lorenzofelletti.simplebleapp.BuildConfig.DEBUG
 import com.lorenzofelletti.simplebleapp.ble.gattserver.GattServerManager
-import com.lorenzofelletti.simplebleapp.ble.gattserver.PeripheralAdvertiseService
-import com.lorenzofelletti.simplebleapp.ble.gattserver.model.BleServiceConnection
 import com.lorenzofelletti.simplebleapp.blescriptrunner.viewmodel.GattServerManagerViewModel
 import com.lorenzofelletti.simplebleapp.blescriptrunner.Constants
 import com.lorenzofelletti.simplebleapp.blescriptrunner.model.BleGattServerCallback
@@ -30,12 +26,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var gattServerManager: GattServerManager
     private val gattServerManagerViewModel: GattServerManagerViewModel by viewModels()
 
-    /** Defines callbacks for service binding, passed to bindService()  */
-    private val connection = BleServiceConnection.Builder()
-        .addCommonActions(::updateBtnStartServerText, ::changeNotificationBtnEnableState)
-        .addOnServiceConnectedActions(::startGattServer)
-        .addOnServiceDisconnectedActions(::stopGattServer).build()
-
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,7 +33,7 @@ class MainActivity : AppCompatActivity() {
 
         PermissionsUtilities.buildRequestResultsDispatcher {
             onGranted(BLE_SERVER_REQUEST_CODE) {
-                bindToAdvertiseService()
+                startGattServer()
             }
             onDenied(BLE_SERVER_REQUEST_CODE) {
                 Toast.makeText(
@@ -65,21 +55,21 @@ class MainActivity : AppCompatActivity() {
 
         // Adding the onclick listener to the start server button
         btnStartServer.setOnClickListener {
-            if (!connection.bound) {
+            if (!gattServerManager.isRunning) {
                 /* Checks if the required permissions are granted and starts the GATT server,
                  * requesting them otherwise. */
                 when (PermissionsUtilities.checkPermissionsGranted(
                     this, AppRequiredPermissions.permissions
                 )) {
                     true -> {
-                        bindToAdvertiseService()
+                        startGattServer()
                     }
                     false -> PermissionsUtilities.checkPermissions(
                         this, AppRequiredPermissions.permissions, BLE_SERVER_REQUEST_CODE
                     )
                 }
             } else {
-                unbindFromAdvertiseService()
+                stopGattServer()
             }
         }
 
@@ -97,48 +87,32 @@ class MainActivity : AppCompatActivity() {
         // setting up the connected devices fragment
         val connectedDevicesFragment = ConnectedDevices.newInstance()
         supportFragmentManager.beginTransaction().add(
-                R.id.frameLayout, connectedDevicesFragment, ConnectedDevices::class.java.simpleName
-            ).commit()
+            R.id.frameLayout, connectedDevicesFragment, ConnectedDevices::class.java.simpleName
+        ).commit()
     }
 
     override fun onDestroy() {
-        unbindFromAdvertiseService()
+        stopGattServer()
 
         super.onDestroy()
     }
 
-    private fun bindToAdvertiseService() {
-        if (DEBUG) Log.d(TAG, "Binding to the Advertise Service")
-
-        if (!connection.bound) {
-            Toast.makeText(this, "Starting the GATT server", Toast.LENGTH_SHORT).show()
-
-            Intent(this, PeripheralAdvertiseService::class.java).also { intent ->
-                bindService(intent, connection, Context.BIND_AUTO_CREATE)
-            }
-        }
-    }
-
-    private fun unbindFromAdvertiseService() {
-        if (DEBUG) Log.d(TAG, "Unbinding from the Advertise Service")
-
-        if (connection.bound) {
-            Toast.makeText(this, "Stopping the GATT server", Toast.LENGTH_SHORT).show()
-
-            unbindService(connection)
-        }
+    private fun updateGuiOnServerStateChange() {
+        updateBtnStartServerText()
+        changeNotificationBtnEnableState()
     }
 
     @SuppressLint("MissingPermission")
     private fun startGattServer() {
         gattServerManager.startGattServer()
-
         setBluetoothService(gattServerManager)
+        updateGuiOnServerStateChange()
     }
 
     @SuppressLint("MissingPermission")
     private fun stopGattServer() {
         gattServerManager.stopGattServer()
+        updateGuiOnServerStateChange()
     }
 
     /**
@@ -147,11 +121,11 @@ class MainActivity : AppCompatActivity() {
     private fun updateBtnStartServerText() {
         if (DEBUG) Log.d(TAG, "Updating the start server button text")
 
-        btnStartServer.setText(if (connection.bound) R.string.stop_server else R.string.start_server)
+        btnStartServer.setText(if (gattServerManager.isRunning) R.string.stop_server else R.string.start_server)
     }
 
     private fun changeNotificationBtnEnableState() {
-        btnSendNotification.isEnabled = connection.bound
+        btnSendNotification.isEnabled = gattServerManager.isRunning
     }
 
     /**

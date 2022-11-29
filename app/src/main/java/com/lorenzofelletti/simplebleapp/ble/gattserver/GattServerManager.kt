@@ -3,6 +3,7 @@ package com.lorenzofelletti.simplebleapp.ble.gattserver
 import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.lorenzofelletti.simplebleapp.BuildConfig.DEBUG
@@ -27,26 +28,39 @@ class GattServerManager(
     adapter: ConnectedDeviceAdapterInterface? = null,
     private val gattServerCallbackClass: KClass<out AbstractBleGattServerCallback>,
 ) : HasConnectedDevicesAdapter, HasConnectedDevicesMap {
-    private val bluetoothManager = context.getSystemService(BluetoothManager::class.java)
-
-    private var gattServerCallback =
-        gattServerCallbackClass.constructors.first().call(adapter, bluetoothConnectedDevices)
-
     override var adapter = adapter
         set(value) {
             field = value
             gattServerCallback.adapter = value
         }
 
+    var isRunning = false
+        private set
+
+    private val bluetoothManager = context.getSystemService(BluetoothManager::class.java)
+
+    private var gattServerCallback =
+        gattServerCallbackClass.constructors.first().call(adapter, bluetoothConnectedDevices)
+
     private var bluetoothGattServer: BluetoothGattServer? = null
 
     private val servicesMap: MutableMap<UUID, BluetoothGattService> = mutableMapOf()
     private val characteristicsMap: MutableMap<UUID, BluetoothGattCharacteristic> = mutableMapOf()
 
+    private fun manageAdvertiseServiceState() =
+        Intent(context, PeripheralAdvertiseService::class.java).also { intent ->
+            when (isRunning) {
+                true -> context.startService(intent)
+                false -> context.stopService(intent)
+            }
+        }
 
     @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
     fun startGattServer() {
         if (DEBUG) Log.i(TAG, "${::startGattServer.name} - Starting GattServer...")
+
+        isRunning = true
+        manageAdvertiseServiceState()
 
         bluetoothGattServer = bluetoothManager.openGattServer(context, gattServerCallback)
         gattServerCallback.bluetoothGattServer = bluetoothGattServer
@@ -84,6 +98,10 @@ class GattServerManager(
     @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
     fun stopGattServer() {
         if (DEBUG) Log.i(TAG, "Stopping GattServer")
+
+        isRunning = false
+        manageAdvertiseServiceState()
+
         bluetoothGattServer?.close()
         adapter?.clearDevices()
         servicesMap.clear()
