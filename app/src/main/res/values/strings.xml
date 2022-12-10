@@ -12,9 +12,9 @@
     <string name="default_script">hello.sh</string>
     <string name="notification_status">Notification</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="enable_bluetooth_dialog_message">Bluetooth must be enabled for the GATT server to start</string>
+    <string name="enable_bluetooth_dialog_title">Enable Bluetooth Request</string>
+    <string name="enable_bluetooth_dialog_message">Bluetooth must be turned on to start the GATT server</string>
     <string name="enable_bluetooth_dialog_positive_button">Enable</string>
     <string name="enable_bluetooth_dialog_negative_button">Cancel</string>
-    <string name="enable_bluetooth_dialog_title">Enable Bluetooth</string>
     <string name="user_refused_to_enable_bt_toast">Enable Bluetooth to have the ability to start the GATT server</string>
 </resources>
