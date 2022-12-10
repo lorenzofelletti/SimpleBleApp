@@ -8,7 +8,7 @@ import android.Manifest
 object AppRequiredPermissions {
 
     /** Array of required permissions for BLE scanning. */
-    val permissions = arrayOf(
+    val gattServerPermissions = arrayOf(
         Manifest.permission.BLUETOOTH_SCAN,
         Manifest.permission.ACCESS_COARSE_LOCATION,
         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -17,4 +17,10 @@ object AppRequiredPermissions {
         Manifest.permission.BLUETOOTH_ADVERTISE,
         Manifest.permission.BLUETOOTH,
     )
+
+    /** The rationale message to show when the user denies the permissions. */
+    const val gattServerRationaleMessage =
+        "The app needs Bluetooth and Location permissions for the GATT server to work properly."
+
+    const val GATT_SERVER_REQUEST_CODE = 2
 }

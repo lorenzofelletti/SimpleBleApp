@@ -23,7 +23,8 @@ fun setBluetoothService(gattServerManager: GattServerManager) {
     )
 
     val scriptRunnerCharDescriptor = BluetoothGattDescriptor(
-        Constants.UUID_SCRIPT_RUNNER_DESCRIPTOR, BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_WRITE
+        Constants.UUID_SCRIPT_RUNNER_DESCRIPTOR,
+        BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_WRITE
     )
     scriptRunnerCharacteristic.descriptors?.add(scriptRunnerCharDescriptor)
 
@@ -38,7 +39,8 @@ fun setBluetoothService(gattServerManager: GattServerManager) {
     )
 
     val scriptResultsCharDescriptor = BluetoothGattDescriptor(
-        Constants.UUID_SCRIPT_RESULTS_DESCRIPTOR, BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_WRITE
+        Constants.UUID_SCRIPT_RESULTS_DESCRIPTOR,
+        BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_WRITE
     )
     scriptResultsCharacteristic.descriptors?.add(scriptResultsCharDescriptor)
 
@@ -46,6 +48,28 @@ fun setBluetoothService(gattServerManager: GattServerManager) {
 
     gattServerManager.addService(scriptRunnerService)
 
-    gattServerManager.addCharacteristicToService(scriptRunnerService.uuid, scriptResultsCharacteristic)
-    gattServerManager.addCharacteristicToService(scriptRunnerService.uuid, scriptRunnerCharacteristic)
+    gattServerManager.addCharacteristicToService(
+        scriptRunnerService.uuid,
+        scriptResultsCharacteristic
+    )
+    gattServerManager.addCharacteristicToService(
+        scriptRunnerService.uuid,
+        scriptRunnerCharacteristic
+    )
+}
+
+fun MainActivity.showEnableBluetoothDialog(
+    onPositiveButtonClicked: () -> Unit,
+    onNegativeButtonClicked: () -> Unit
+) {
+    val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+    builder.setTitle(R.string.enable_bluetooth_dialog_title)
+    builder.setMessage(R.string.enable_bluetooth_dialog_message)
+    builder.setPositiveButton(R.string.enable_bluetooth_dialog_positive_button) { _, _ ->
+        onPositiveButtonClicked()
+    }
+    builder.setNegativeButton(R.string.enable_bluetooth_dialog_negative_button) { _, _ ->
+        onNegativeButtonClicked()
+    }
+    builder.show()
 }
